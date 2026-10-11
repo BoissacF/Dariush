@@ -1,0 +1,157 @@
+/* ============================================================
+   CSS propre à Dariush SQL
+   ============================================================ */
+
+/* Bloc de résultat ou message */
+.output .sql-block {
+  margin: 6px 0;
+}
+
+/* Tableau de résultats SELECT */
+.output .sql-table {
+  border-collapse: collapse;
+  margin: 4px 0;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 0.95em;
+  background: #fff;
+}
+
+.output .sql-table th,
+.output .sql-table td {
+  border: 1px solid #c0c0c0;
+  padding: 4px 8px;
+  text-align: left;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.output .sql-table th {
+  background: #e8eef5;
+  font-weight: 600;
+  color: #1a3a6e;
+}
+
+.output .sql-table tbody tr:nth-child(even) {
+  background: #f7f9fc;
+}
+
+/* Compteur de lignes sous le tableau */
+.output .sql-count {
+  font-size: 0.85em;
+  color: #555;
+  margin: 2px 0 8px 4px;
+  font-style: italic;
+}
+
+/* Cellule vide */
+.output .sql-empty {
+  text-align: center;
+  color: #999;
+  font-style: italic;
+}
+
+/* Valeur NULL */
+.output .sql-null {
+  color: #888;
+  font-style: italic;
+}
+
+/* Données binaires */
+.output .sql-blob {
+  color: #888;
+  font-style: italic;
+}
+
+/* Messages : OK, erreur, info, prêt */
+.output .sql-ok {
+  color: #1a7a1a;
+  font-weight: 500;
+  padding: 4px 8px;
+  background: #ecf8ec;
+  border-left: 3px solid #1a7a1a;
+  border-radius: 2px;
+}
+
+.output .sql-error {
+  color: #c0392b;
+  font-weight: 500;
+  padding: 4px 8px;
+  background: #fdecea;
+  border-left: 3px solid #c0392b;
+  border-radius: 2px;
+  white-space: pre-wrap;
+}
+
+.output .sql-info {
+  color: #666;
+  font-style: italic;
+  padding: 4px 0;
+}
+
+.output .sql-ready {
+  color: #1a3a6e;
+  font-weight: 500;
+}
+
+/* ============================================================
+   Thème sombre Dariush (body.dariush-dark)
+   ============================================================ */
+body.dariush-dark .output .sql-table {
+  background: #2b2b2b;
+  color: #e8e8e8;
+}
+
+body.dariush-dark .output .sql-table th {
+  background: #3a4a5e;
+  color: #ffffff;
+}
+
+body.dariush-dark .output .sql-table td {
+  color: #e8e8e8;
+}
+
+body.dariush-dark .output .sql-table tbody tr:nth-child(even) {
+  background: #333;
+}
+
+body.dariush-dark .output .sql-table tbody tr:nth-child(even) td {
+  color: #e8e8e8;
+}
+
+body.dariush-dark .output .sql-table th,
+body.dariush-dark .output .sql-table td {
+  border-color: #555;
+}
+
+body.dariush-dark .output .sql-null,
+body.dariush-dark .output .sql-blob {
+  color: #999;
+}
+
+body.dariush-dark .output .sql-count {
+  color: #aaa;
+}
+
+body.dariush-dark .output .sql-empty {
+  color: #888;
+}
+
+body.dariush-dark .output .sql-ok {
+  background: #1f3a1f;
+  color: #a8e8a8;
+  border-left-color: #5fb85f;
+}
+
+body.dariush-dark .output .sql-error {
+  background: #4a2020;
+  color: #ffb0a8;
+  border-left-color: #e25555;
+}
+
+body.dariush-dark .output .sql-info {
+  color: #aaa;
+}
+
+body.dariush-dark .output .sql-ready {
+  color: #b8c8e8;
+}

@@ -1,0 +1,137 @@
+:root{
+  --ink:#1b2230;          /* texte principal */
+  --slate:#5b6678;        /* texte secondaire */
+  --line:#d7dde6;         /* filets */
+  --paper:#f7f8fb;        /* fond travail */
+  --panel:#ffffff;        /* cartes */
+  --accent:#3b54d6;       /* indigo : sommets/actions */
+  --accent-soft:#eaedfb;
+  --danger:#b5384a;       /* suppressions */
+  --danger-soft:#fbeaed;
+  --ok:#1f7a52;
+  --radius:10px;
+  --mono:"SFMono-Regular",ui-monospace,"Cascadia Mono","JetBrains Mono",Consolas,monospace;
+  --sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;font-family:var(--sans);color:var(--ink);background:var(--paper);
+  /* trame légère type papier à graphe */
+  background-image:
+    linear-gradient(var(--line) 1px,transparent 1px),
+    linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:26px 26px;
+}
+
+/* ===== Bandeau gris (identique à Dariush) ===== */
+.top-bar{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  min-height:50px;
+  padding:4px 12px;
+  background:#e5e7eb;
+  border-bottom:1px solid #c7ccd1;
+}
+.top-bar-left{
+  font-size:16px;
+  font-weight:600;
+  color:#1f2937;
+  white-space:nowrap;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+/* Quand la page est ouverte dans le panneau (iframe), le bandeau gris du
+   panneau fait déjà office de titre : on masque celui-ci pour éviter le doublon. */
+html.embedded .top-bar{ display:none; }
+
+/* ===== Texte explicatif ===== */
+.intro{
+  margin:0;
+  padding:10px 22px;
+  font-size:13px;
+  color:var(--slate);
+  background:rgba(255,255,255,.7);
+  border-bottom:1px solid var(--line);
+}
+
+/* ===== Mise en page deux colonnes ===== */
+.wrap{display:grid;grid-template-columns:minmax(340px,1fr) minmax(360px,1.1fr);gap:0;min-height:calc(100vh - 95px)}
+@media (max-width:880px){.wrap{grid-template-columns:1fr}}
+.col{padding:18px 20px}
+.col.editor{border-right:1px solid var(--line);background:rgba(255,255,255,.72)}
+.col.output{display:flex;flex-direction:column;gap:14px}
+
+.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+label.field{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--slate)}
+select,input[type=text],input[type=number]{
+  font:inherit;font-size:14px;padding:7px 9px;border:1px solid var(--line);
+  border-radius:8px;background:#fff;color:var(--ink);min-width:0
+}
+input[type=color]{width:42px;height:34px;padding:2px;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid transparent;padding:8px 12px;font-size:14px}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover{filter:brightness(1.05)}
+button.ghost{background:#fff;border-color:var(--line);color:var(--ink)}
+button.ghost:hover{border-color:var(--accent);color:var(--accent)}
+button.danger{background:var(--danger-soft);color:var(--danger);border-color:transparent}
+button.danger:hover{background:#f6dde1}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+
+/* ----- liste des sommets ----- */
+.nodes-list{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.node-row{display:flex;align-items:stretch;gap:8px}
+.node-open{
+  flex:1;display:flex;align-items:center;gap:10px;text-align:left;
+  background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 12px
+}
+.node-open:hover{border-color:var(--accent)}
+.glyph{
+  width:22px;height:22px;flex:0 0 auto;border:2px solid var(--ink);
+  display:inline-block;background:var(--dot,#fff)
+}
+.glyph.rect{border-radius:3px}
+.glyph.circle{border-radius:50%}
+.glyph.diamond{border-radius:3px;transform:rotate(45deg);width:16px;height:16px}
+.glyph.hex{clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+.glyph.triangle{clip-path:polygon(50% 0,100% 100%,0 100%);border-radius:0}
+.node-open .name{font-weight:600}
+.node-open .name.empty{font-weight:400;color:var(--slate);font-style:italic}
+
+.empty-hint{color:var(--slate);font-size:13px;margin-top:10px;line-height:1.5}
+
+/* ----- panneau détail d'un sommet ----- */
+.detail{display:flex;flex-direction:column;gap:14px}
+.detail .back{align-self:flex-start;background:none;border:none;color:var(--accent);padding:0;font-size:14px}
+.detail .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.detail .grid .full{grid-column:1 / -1}
+fieldset{border:1px solid var(--line);border-radius:10px;padding:12px;margin:0}
+legend{padding:0 6px;font-size:12px;color:var(--slate)}
+.edge-item{border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:10px;background:#fbfcfe;
+  display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.edge-item .ori{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--slate);white-space:nowrap;padding-bottom:8px}
+.edge-item .grow{flex:1;min-width:120px}
+.edge-item .w{width:90px}
+.edge-item .del-edge{margin-left:auto}
+.edge-empty{color:var(--slate);font-size:13px;margin:2px 0 10px}
+.node-action{margin-top:6px;padding-top:14px;border-top:1px dashed var(--line)}
+.node-action button{width:100%}
+
+/* ----- sortie ----- */
+.preview-card,.code-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+.preview-card{flex:1;min-height:220px;display:flex;flex-direction:column}
+.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.card-head h2{font-size:13px;margin:0;color:var(--slate);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+#preview{flex:1;display:flex;align-items:center;justify-content:center;overflow:auto}
+#preview svg{max-width:100%;height:auto}
+.preview-msg{color:var(--slate);font-size:14px;text-align:center;padding:20px}
+.preview-msg.err{color:var(--danger)}
+textarea#code{
+  width:100%;min-height:150px;resize:vertical;font-family:var(--mono);font-size:13px;
+  line-height:1.5;border:1px solid var(--line);border-radius:8px;padding:10px;color:var(--ink);background:#fbfcfe
+}
+.copied{color:var(--ok);font-size:13px;margin-left:8px}
+.code-note{margin:-2px 0 10px;font-size:12px;color:var(--slate);font-style:italic;line-height:1.4}

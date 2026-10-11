@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dariush – Règles de confidentialité</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      line-height: 1.6;
+      color: #222;
+      background: #f6f6f4;
+    }
+    main {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+      background: #fff;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+    h1 { font-size: 1.7rem; margin: 0 0 4px; }
+    h2 { font-size: 1.15rem; margin: 32px 0 8px; }
+    .date { color: #666; margin: 0 0 24px; }
+    .retour { display: inline-block; margin-bottom: 20px; color: #7a4a12; }
+    a { color: #7a4a12; }
+    li { margin-bottom: 6px; }
+    footer { margin-top: 40px; color: #666; font-size: 0.9rem; }
+  </style>
+</head>
+
+<body>
+<main>
+
+  <a class="retour" href="index.html">← Retour à l'accueil de Dariush</a>
+
+  <h1>Règles de confidentialité de Dariush</h1>
+  <p class="date">Dernière mise à jour : 6 octobre 2026</p>
+
+  <p>
+    Dariush est un environnement de développement pédagogique en ligne (Python, SQL, Linux)
+    accessible à l'adresse <a href="https://physalgo.fr/Dariush/index.html">physalgo.fr/Dariush</a>.
+    Il est édité par Frédéric Boissac, enseignant. Cette page explique quelles données sont
+    utilisées, et dans quel but.
+  </p>
+
+  <h2>1. En résumé</h2>
+  <ul>
+    <li>Les élèves n'ont pas de compte à créer : Dariush ne demande ni nom, ni adresse e-mail.</li>
+    <li>Le code et les documents sur lesquels vous travaillez restent dans votre navigateur,
+        sauf si vous utilisez une des fonctions en ligne décrites ci-dessous.</li>
+    <li>Dariush ne vend aucune donnée et n'affiche aucune publicité.</li>
+  </ul>
+
+  <h2>2. Travail dans le navigateur</h2>
+  <p>
+    Dans Dariush Python et Dariush SQL, votre code s'exécute directement dans votre navigateur.
+    Votre travail en cours est sauvegardé automatiquement dans la mémoire locale du navigateur
+    (« stockage local ») de l'ordinateur que vous utilisez, pour pouvoir le retrouver à la
+    prochaine ouverture. Ces données ne sont pas envoyées au serveur de Dariush. Vous pouvez
+    les effacer en vidant les données de navigation.
+  </p>
+
+  <h2>3. Google Drive (facultatif)</h2>
+  <p>
+    Si vous cochez la case « Google Drive » dans les fenêtres Ouvrir ou Enregistrer, Dariush
+    vous demande de vous connecter à votre compte Google. Cette fonction est facultative.
+  </p>
+  <ul>
+    <li>Dariush demande uniquement l'autorisation <em>drive.file</em> : il n'a accès qu'aux
+        fichiers que vous choisissez vous-même dans le sélecteur Google, et à ceux que vous
+        enregistrez avec Dariush. Il ne peut pas parcourir le reste de votre Drive.</li>
+    <li>Ces fichiers servent seulement à être ouverts dans Dariush ou enregistrés sur votre
+        Drive, à votre demande.</li>
+    <li>Les échanges se font directement entre votre navigateur et Google. Le contenu de vos
+        fichiers, votre identité Google et l'autorisation de connexion ne sont ni envoyés au
+        serveur de Dariush, ni conservés par lui, ni transmis à des tiers.</li>
+    <li>L'autorisation de connexion est temporaire (environ une heure) et n'est gardée que
+        dans la page ouverte. Le navigateur mémorise seulement l'état de la case et le
+        dernier dossier choisi.</li>
+    <li>Vous pouvez retirer l'accès à tout moment depuis votre compte Google :
+        <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a>.</li>
+  </ul>
+  <p>
+    L'utilisation par Dariush des informations reçues des API Google respecte les
+    <a href="https://developers.google.com/terms/api-services-user-data-policy">Règles
+    relatives aux données utilisateur des services API Google</a>, y compris les exigences
+    d'utilisation limitée.
+  </p>
+
+  <h2>4. Travail en groupe et aide individuelle</h2>
+  <p>
+    Quand vous rejoignez une session de groupe ou demandez de l'aide, le pseudo que vous
+    saisissez, le code partagé et les messages du tchat passent par le serveur de Dariush pour
+    être transmis aux autres participants. Ces données sont conservées temporairement, le
+    temps de la session, puis supprimées automatiquement. Choisissez un pseudo qui ne révèle
+    pas d'information personnelle si vous le souhaitez.
+  </p>
+  <p>
+    La communication audio se fait directement entre les navigateurs des participants ; elle
+    n'est pas enregistrée. Pour établir cette liaison, votre adresse IP est communiquée aux
+    autres participants et à un serveur technique de Google (STUN).
+  </p>
+
+  <h2>5. Dariush Linux</h2>
+  <p>
+    Le terminal Linux fonctionne sur le serveur de Dariush, dans un espace isolé. Les commandes
+    que vous tapez et les fichiers que vous y créez sont donc traités et stockés sur ce
+    serveur. Un compte resté 30 jours sans activité est supprimé automatiquement avec tous
+    ses fichiers, qui sont définitivement effacés du serveur 7 jours plus tard. N'y déposez
+    pas d'informations personnelles.
+  </p>
+
+  <h2>6. Assistance par intelligence artificielle</h2>
+  <p>
+    Quand vous utilisez l'assistance IA, votre question et le contenu nécessaire pour y
+    répondre (code, texte de la page) sont transmis à un service d'intelligence artificielle
+    externe : Groq par défaut, ou le fournisseur que vous choisissez si vous saisissez votre
+    propre clé (OpenAI, Anthropic, Mistral, Google Gemini, DeepSeek). Ces services appliquent
+    leurs propres règles de confidentialité. Vos questions et votre clé personnelle ne sont
+    pas conservées par le serveur de Dariush : il ne fait que les transmettre. N'écrivez pas d'informations personnelles dans
+    vos questions.
+  </p>
+
+  <h2>7. Exercices partagés et liens</h2>
+  <p>
+    Les enseignants qui publient des exercices disposent d'un identifiant. Sont enregistrés :
+    le contenu de l'exercice, son descriptif, son niveau et l'enseignant contributeur. Les
+    mots de passe provisoires donnés aux élèves pour accéder à certains exercices sont
+    supprimés automatiquement au bout d'un mois. Quand vous créez un lien de partage, le
+    contenu du document partagé est enregistré sur le serveur pour que le lien fonctionne.
+  </p>
+
+  <h2>8. Mesure d'audience</h2>
+  <p>
+    Dariush utilise Google Analytics pour connaître le nombre de visites et les pages
+    consultées. Ce service peut déposer des cookies et collecter des données techniques
+    (adresse IP, type de navigateur). Ces statistiques ne servent qu'à améliorer le site.
+  </p>
+
+  <h2>9. Vos droits</h2>
+  <p>
+    Conformément au Règlement général sur la protection des données (RGPD), vous pouvez
+    demander l'accès aux données vous concernant, leur rectification ou leur suppression.
+    Pour toute question ou demande, écrivez à : <a href="mailto:prof.boissac@gmail.com">prof.boissac@gmail.com</a>.
+    Vous pouvez aussi adresser une réclamation à la CNIL (<a href="https://www.cnil.fr">cnil.fr</a>).
+  </p>
+
+  <footer>© 2026 Frédéric Boissac</footer>
+
+</main>
+</body>
+</html>

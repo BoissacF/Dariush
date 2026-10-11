@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <script defer src="analytics.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dariush Linux — Terminal en ligne</title>
+
+  <!-- CSS commun -->
+  <link rel="stylesheet" type="text/css" href="../Dariush_Commun/version3/style.css?v=679">
+  <!-- pako -->
+  <script defer src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+
+  <!-- xterm.js -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
+
+  <!-- KaTeX -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/markdown-it-texmath/css/texmath.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/markdown-it-texmath/texmath.min.js"></script>
+
+   <script defer src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+
+  <!-- ══════════════════════════════════════
+       CONNEXION GROUPE ET AIDE — COMMUN
+       WebSocket (nécessite le serveur Node, Dariush-node/server.js)
+  ══════════════════════════════════════ -->
+  <!-- Le travail en groupe n'est pas proposé dans Dariush Linux -->
+
+
+ 
+
+<!-- SOCKET_connexion.js est requis pour créer window._dariushSocket utilisé par terminal.js -->
+<script>
+  window.MARKDOWNS_MULTIPLES_ACTIFS = true;
+  document.addEventListener("DOMContentLoaded", function () {
+    if (window.MARKDOWNS_MULTIPLES_ACTIFS) {
+      document.body.classList.add("markdowns-multiples-actifs");
+    }
+  });
+</script>
+<script>window.DARIUSH_PDF_NO_CODE = true;</script>
+<script defer src="../Dariush_Commun/version3/importer_pdf.js?v=679"></script>
+<script type="module" src="../Dariush_Commun/version3/SOCKET_connexion.js?v=679"></script>
+<script defer src="cssjs_linux3/SOCKET_connexion_aide_linux.js?v=679"></script>
+<script defer src="../Dariush_Commun/version3/aide_toggle.js?v=679"></script>
+<!-- SCRIPTS COMMUNS -->
+<script defer src="../Dariush_Commun/version3/gestionMenu.js?v=679"></script>
+<script defer src="../Dariush_Commun/version3/plein_ecran.js?v=679"></script>
+<script defer src="../Dariush_Commun/version3/raccourci_executer.js?v=679"></script>
+<script defer src="../Dariush_Commun/version3/sauvegarde.js?v=679"></script>
+<script defer src="../Dariush_Commun/version3/importer.js?v=679"></script>
+<script defer src="cssjs_linux3/fakeEditor.js?v=679"></script>
+<script defer src="../Dariush_Commun/version3/pagesmultiples.js?v=679"></script>
+<script defer src="../Dariush_Commun/version3/scrollFlipPage.js?v=679"></script>
+<script defer src="cssjs_linux3/bottomPageNav.js?v=679"></script>
+<script defer src="../Dariush_Commun/version3/pageScrollbar.js?v=679"></script>
+<script defer src="../Dariush_Commun/fichiersannexes/markdown-it.min.js?v=679"></script>
+<script defer src="../Dariush_Commun/version3/markdown.js?v=679"></script>
+<script defer src="../Dariush_Commun/version3/googleDrive.js?v=679"></script>
+<script defer src="../Dariush_Commun/version3/outils.js?v=679"></script>
+<script defer src="../Dariush_Commun/version3/IA.js?v=679"></script>
+<script defer src="../Dariush_Commun/version3/agent_aide.js?v=679"></script>
+<script defer src="../Dariush_Commun/version3/gestionimages.js?v=679"></script>
+<script defer src="../Dariush_Commun/version3/graphPanel.js?v=8860"></script>
+<!-- SCRIPT SPÉCIFIQUE LINUX -->
+<script defer src="cssjs_linux3/terminal.js?v=679"></script>
+<script defer src="cssjs_linux3/adminClasse.js?v=679"></script>
+<script defer src="cssjs_linux3/initLinux.js?v=679"></script>
+
+
+
+ <style>
+    #terminalContainer {
+      width: 100%;
+      height: 400px;
+      background: #1e1e1e;
+      border-radius: 4px;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+    #terminalContainer .xterm { height: 100%; padding: 6px; }
+
+    /* ══════════════════════════════════════
+       FAUX TERMINAL DU PROF — même style que le vrai
+    ══════════════════════════════════════ */
+    #terminalContainerAide {
+      width: 100%;
+      height: 400px;
+      background: #1e1e1e;
+      border-radius: 4px;
+      overflow: hidden;
+      box-sizing: border-box;
+      border: 2px solid #ff9800;   /* bordure orange pour bien différencier */
+      position: relative;          /* nécessaire pour le curseur souris en overlay */
+    }
+    #terminalContainerAide .xterm { height: 100%; padding: 6px; }
+
+   
+</style>
+
+</head>
+
+<body>
+  <div class="container">
+
+    <!-- ══════════════════════════════════════
+         MENU
+    ══════════════════════════════════════ -->
+    <div class="top-bar">
+      <div class="top-bar-left">
+  <select id="dariushAppSelect" class="dariush-app-select"
+        onchange="changerDariushApp(this)">
+  <option value="" disabled>Choisir une app…</option>
+
+  
+          <option value="../Dariush_Python/index.html">🐍 Dariush Python</option>
+          <option value="" data-current="1" selected>🐧 Dariush Linux</option>
+          <option value="../Dariush_SQL/index.html">🗄️ Dariush SQL</option>
+
+
+  
+  
+</select>
+  <span class="subtitle-inline">— explorer, créer, partager</span>
+</div>
+      <!--
+      <div class="top-bar-left">
+        Dariush Linux
+        <span class="subtitle-inline">— explorer, créer, partager</span>
+      </div>
+    -->
+      <button type="button" class="top-bar-toggle" id="topBarToggle" aria-label="Ouvrir le menu" aria-expanded="false">☰</button>
+      <div class="top-bar-menu" id="topBarMenu">
+        <button class="nav-item nav-dropbtn" type="button" id="btnExercices" onclick="ouvrirRechercheExercices()">Exercices</button>
+        <button class="nav-item nav-btn" type="button" onclick="showMenuPanel('panel-enseignant')">Enseignant</button>
+        <button class="nav-item nav-btn" type="button" onclick="showMenuPanel('panel-aide')">Aide</button>
+        <button class="nav-item nav-btn" type="button" onclick="showMenuPanel('panel-apropos')">A propos</button>
+        <a class="nav-item nav-home" href="https://physalgo.fr/Dariush/index.html">Home</a>
+      </div>
+    </div>
+
+    <!-- Modal menu -->
+    <div id="menuModalOverlay" class="menu-modal-overlay" style="display:none;" onclick="handleMenuModalBackdrop(event)">
+      <div class="menu-modal-window" role="dialog" aria-modal="true" aria-labelledby="menuModalTitle">
+        <div class="menu-modal-header">
+          <h3 id="menuModalTitle">Menu</h3>
+          <button class="menu-close-btn" type="button" onclick="hideMenuPanels()" aria-label="Fermer">✕</button>
+        </div>
+        <div id="menuPanels" class="menu-modal-body">
+
+          <!-- Panel enseignant -->
+          <div id="panel-enseignant" class="menu-panel" data-title="Espace enseignant" style="display:none;">
+            <p>Si vous êtes enseignant vous pouvez créer et gérer votre propre base de données d'exercices en obtenant un code d'utilisateur par une simple demande à l'auteur du site.</p>
+            <div class="proposer-actions-inline" style="margin-top:16px;">
+              <button type="button" class="nav-item nav-btn" onclick="showMenuPanel('panel-proposer'); resetProposerPanel();">Ajouter un exercice</button>
+              <button type="button" class="nav-item nav-btn" onclick="showMenuPanel('panel-supprimer'); resetSupprimerPanel();">Supprimer</button>
+              <button type="button" class="nav-item nav-btn" onclick="showMenuPanel('panel-modifier'); resetModifierPanel();">Modifier/Corriger</button>
+              <button type="button" class="nav-item nav-btn" onclick="showMenuPanel('panel-obtenir-code'); resetObtenirCodePanel();">Obtenir un code utilisateur</button>
+           
+              <button type="button" class="nav-item nav-btn"
+                onclick="showMenuPanel('panel-mdp-eleve'); resetMdpElevePanel();">
+                Mot de passe pour élèves
+              </button>
+           
+           
+            </div>
+          </div>
+
+             <!-- Panel aide -->
+
+          <div id="panel-aide" class="menu-panel aide-panel-themes" data-title="Aide" style="display:none;">
+
+    
+    <div class="aide-top-row">
+      <button type="button" class="nav-item nav-btn btn-video" onclick="ouvrirVideoAide('presentation.mp4', 'Présentation générale')">Présentation générale</button>
+    </div>
+
+    <div class="aide-theme aide-theme-codage">
+      <span class="aide-theme-label">Codage</span>
+    </div>
+    <div class="aide-theme-grid">
+      <button type="button" class="nav-item nav-btn btn-video" onclick="ouvrirVideoAide('terminalLinux.mp4', 'Terminal Linux en ligne')">Terminal Linux en ligne</button>
+      
+      <button type="button" class="nav-item nav-btn btn-video" onclick="ouvrirVideoAide('ajouterCSS.mp4', 'Ajouter du style CSS')">Ajouter du style CSS</button>
+    <button type="button" class="nav-item nav-btn btn-video" onclick="ouvrirVideoAide('genereGraphe.mp4', 'Générer un arbre/graphe')">Générer un arbre/graphe</button>
+          
+	<a href="https://physalgo.fr/Dariush_Python/index.html?exo=4flQ6C" target="_blank" rel="noopener" class="nav-item nav-btn markdown-help-btn">Guide Markdown</a>
+    </div>
+
+    <div class="aide-theme aide-theme-exercices">
+      <span class="aide-theme-label">Exercices</span>
+    </div>
+    <div class="aide-theme-grid">
+      <button type="button" class="nav-item nav-btn btn-video" onclick="ouvrirVideoAide('ajouterExercice.mp4', 'Ajouter un exercice')">Ajouter un exercice</button>
+      <button type="button" class="nav-item nav-btn btn-video" onclick="ouvrirVideoAide('ajouterCorrection.mp4', 'Ajouter une correction')">Ajouter une correction</button>
+      <button type="button" class="nav-item nav-btn btn-video" onclick="ouvrirVideoAide('gestionPDF.mp4', 'Import/Export PDF')">Import/Export PDF</button>
+    </div>
+
+    <div class="aide-theme aide-theme-partage">
+      <span class="aide-theme-label">Partage</span>
+    </div>
+    <div class="aide-theme-grid">
+      <button type="button" class="nav-item nav-btn btn-video" onclick="ouvrirVideoAide('genererLien.mp4', 'Générer un lien')">Générer un lien</button>
+      <button type="button" class="nav-item nav-btn btn-video" onclick="ouvrirVideoAide('aideprof.mp4', 'Aide du professeur')">Aide du professeur</button>
+      <button type="button" class="nav-item nav-btn btn-video" onclick="ouvrirVideoAide('gestionFichiers.mp4', 'Gestion des fichiers')">Gestion des fichiers</button>
+      <button type="button" class="nav-item nav-btn btn-video" onclick="ouvrirVideoAide('importerRessource.mp4', 'Importer une ressource')">Importer une ressource</button>
+    </div>
+
+    <div class="aide-theme aide-theme-ia">
+      <span class="aide-theme-label">IA</span>
+    </div>
+    <div class="aide-theme-grid">
+      <button type="button" class="nav-item nav-btn btn-video" onclick="ouvrirVideoAide('boutonIA.mp4', 'Ajouter un bouton Aide_IA à un exercice')">Bouton Aide_IA sur exercice</button>
+      <button type="button" class="nav-item nav-btn btn-video" onclick="ouvrirVideoAide('assistance.mp4', 'Assistance de cours')">Assistance de cours</button>
+       </div>
+
+          </div>
+
+  
+
+          <!-- Panel à propos -->
+          <!-- Panel à propos -->
+<div id="panel-apropos" class="menu-panel" data-title="À propos" style="display:none;">
+  <ul style="list-style:none; padding-left:0; margin-top:10px;">
+    <li><span class="text-muted">JavaScript Application 2026</span></li>
+    <li><span class="text-muted">Auteur : Frédéric Boissac</span></li>
+    <li><span class="text-muted">Toutes les licences sont libres pour un usage non commercial</span></li>
+    <li id="aproposLinuxConnectes" style="margin-top:12px; font-weight:600; color:#1976d2;">
+      Élèves connectés sur Dariush Linux : <span id="aproposLinuxCount">…</span> / <span id="aproposLinuxMax">…</span>
+    </li>
+     <li id="aproposLinuxRecord" style="margin-top:4px; font-size:0.9em; color:#555;">
+      Nombre maximum atteint : <span id="aproposLinuxRecordCount">…</span>
+    </li>
+  </ul>
+</div>
+
+          <!-- Panel supprimer -->
+          <div id="panel-supprimer" class="menu-panel" data-title="Supprimer un exercice" style="display:none;">
+            <div id="supprimerEtapeCode">
+              <p>Pour supprimer un exercice, entrez votre code utilisateur.</p>
+              <div class="proposer-form">
+                <label for="verificationCodeSuppression">Code utilisateur</label>
+                <input type="password" id="verificationCodeSuppression" placeholder="Entrez votre code utilisateur">
+                <div class="proposer-actions-inline">
+                  <button type="button" class="nav-item nav-btn" onclick="verifierCodeSuppression()">Valider</button>
+                </div>
+              </div>
+              <p id="messageVerificationSuppression" style="margin-top:10px;"></p>
+            </div>
+            <div id="supprimerEtapeFormulaire" style="display:none;">
+              <p>Code utilisateur reconnu. Sélectionnez l'exercice à supprimer.</p>
+              <div class="proposer-form">
+                <label for="selectExerciceSuppression">Vos exercices</label>
+                <div id="arbreExerciceSuppression" class="arbre-choix-exercice arbre-niveaux-exercices"></div>
+                <select id="selectExerciceSuppression" style="display:none;"><option value="">Chargement...</option></select>
+                <p id="resumeExerciceSuppression" style="margin-top:10px;"></p>
+                <p id="messageSuppressionExercice" style="margin-top:10px;"></p>
+                <button type="button" class="nav-item nav-btn" onclick="supprimerExerciceUtilisateur()">Supprimer</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel modifier -->
+          <div id="panel-modifier" class="menu-panel" data-title="Modifier ou corriger un exercice" style="display:none; min-height:480px;">
+            <div id="modifierEtapeCode">
+              <p>Pour modifier ou corriger un exercice, entrez votre code utilisateur.</p>
+              <div class="proposer-form">
+                <label for="verificationCodeModification">Code utilisateur</label>
+                <input type="password" id="verificationCodeModification" placeholder="Entrez votre code utilisateur">
+                <div class="proposer-actions-inline">
+                  <button type="button" class="nav-item nav-btn" onclick="verifierCodeModification('modifier')">Modifier un exercice</button>
+                  <button type="button" class="nav-item nav-btn" onclick="verifierCodeModification('corriger')">Corriger un exercice</button>
+                </div>
+              </div>
+              <p id="messageVerificationModification" style="margin-top:10px;"></p>
+            </div>
+            <div id="modifierEtapeFormulaire" style="display:none;">
+              <p>Code utilisateur reconnu. Sélectionnez l'exercice à modifier.</p>
+              <div class="proposer-form">
+                <label for="selectExerciceModification">Vos exercices</label>
+                <div id="arbreExerciceModification" class="arbre-choix-exercice arbre-niveaux-exercices"></div>
+                <select id="selectExerciceModification" style="display:none;"><option value="">Chargement...</option></select>
+                <label for="titreExerciceModification" style="margin-top:10px;">Titre de l'exercice</label>
+                <input type="text" id="titreExerciceModification" placeholder="Titre de l'exercice">
+                <label for="niveauExerciceModification" style="margin-top:10px;">Niveau</label>
+                <select id="niveauExerciceModification">
+                  <option value="debutant">Débutant</option>
+                  <option value="premiere">Première — bases</option>
+                  <option value="premiere2">Première — avancé</option>
+                  <option value="terminale">Terminale — bases</option>
+                  <option value="terminale2">Terminale — avancé</option>
+                  <option value="BAC">BAC</option>
+                  <option value="superieur">Supérieur</option>
+                  <option value="expert">Expert</option>
+                </select>
+                <div class="checkbox-field" style="margin-top:10px;">
+                  <input type="checkbox" id="accesRestreintModification">
+                  <label for="accesRestreintModification">Téléchargement limité aux professeurs</label>
+                </div>
+                <span id="messageModificationExercice" style="display:block; margin-top:4px; font-size:0.9em; min-height:0;"></span>
+                <button type="button" class="nav-item nav-btn" style="margin-top:4px;" onclick="modifierExerciceUtilisateur()">Modifier avec la page active</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel corriger (proposer une correction) -->
+          <div id="panel-corriger" class="menu-panel" data-title="Proposer une correction pour un exercice" style="display:none; min-height: 480px;">
+            <p>Code utilisateur reconnu. Sélectionnez l'exercice pour lequel <strong>la page active</strong> va devenir la correction.</p>
+            <p style="font-size:0.9em; color:#5b6678;">Le corrigé est créé (ou remplacé) à côté de l'exercice : l'exercice lui-même n'est pas modifié. Son titre et son niveau sont repris automatiquement.</p>
+            <div class="proposer-form">
+              <label for="selectExerciceCorrection">Exercice à corriger</label>
+              <div id="arbreExerciceCorrection" class="arbre-choix-exercice arbre-niveaux-exercices"></div>
+              <select id="selectExerciceCorrection" style="display:none;">
+                <option value="">Chargement...</option>
+              </select>
+              <span id="resumeExerciceCorrection" style="display:block; margin-top:6px; font-size:0.9em; color:#3a4657;"></span>
+              <div class="checkbox-field" style="margin-top:10px;">
+                <input type="checkbox" id="accesRestreintCorrection" checked>
+                <label for="accesRestreintCorrection">Téléchargement limité aux professeurs ayant un code d'utilisateur</label>
+              </div>
+              <span id="messageCorrectionExercice" style="display:block; margin-top:4px; font-size:0.9em; min-height:0;"></span>
+              <button type="button" class="nav-item nav-btn" style="margin-top:4px;" onclick="corrigerExerciceUtilisateur()">
+                Créer la correction avec la page active
+              </button>
+            </div>
+          </div>
+
+          <!-- Panel obtenir code utilisateur -->
+          <div id="panel-obtenir-code" class="menu-panel" data-title="Obtenir un code utilisateur" style="display:none;">
+            <p>Complétez les champs ci-dessous puis ouvrez le mail prérempli pour demander votre code utilisateur.</p>
+            <div class="proposer-form">
+              <div class="form-row">
+                <div class="form-field">
+                  <label for="obtenirCodeNom">Nom</label>
+                  <input type="text" id="obtenirCodeNom" placeholder="Votre nom" autocomplete="family-name">
+                </div>
+                <div class="form-field">
+                  <label for="obtenirCodePrenom">Prénom</label>
+                  <input type="text" id="obtenirCodePrenom" placeholder="Votre prénom" autocomplete="given-name">
+                </div>
+              </div>
+              <div class="form-row align-bottom">
+                <div class="form-field">
+                  <label for="obtenirCodeVille">Ville / établissement</label>
+                  <input type="text" id="obtenirCodeVille" placeholder="Votre ville" autocomplete="address-level2">
+                </div>
+                <div class="form-field small">
+                  <label for="obtenirCodeStatut">Statut</label>
+                  <select id="obtenirCodeStatut">
+                    <option value="">Choisir</option>
+                    <option value="Étudiant">Étudiant</option>
+                    <option value="Professeur des écoles">Prof. écoles</option>
+                    <option value="Professeur du secondaire">Prof. secondaire</option>
+                    <option value="Professeur du supérieur">Prof. supérieur</option>
+                    <option value="Autre">Autre</option>
+                  </select>
+                </div>
+                <div class="checkbox-field" style="display:flex; align-items:center; gap:6px; margin-bottom:0; align-self:flex-end; padding-bottom:4px;">
+                  <input type="checkbox" id="obtenirCodeOublie" style="margin:0;">
+                  <label for="obtenirCodeOublie" style="margin:0;">Code oublié</label>
+                </div>
+              </div>
+              <button type="button" class="nav-item nav-btn" onclick="envoyerDemandeCodeUtilisateur()">Ouvrir le mail prérempli</button>
+            </div>
+            <p style="margin-top:12px;">Si rien ne s'ouvre : <a href="mailto:prof.boissac@gmail.com">prof.boissac@gmail.com</a></p>
+            <p id="messageObtenirCode" style="margin-top:10px;"></p>
+          </div>
+        <!-- Panel mot de passe pour élèves -->
+          <div id="panel-mdp-eleve" class="menu-panel" data-title="Mot de passe pour élèves" style="display:none;">
+            <div id="mdpEleveEtapeCode">
+              <p>Générez des mots de passe provisoires (durée de 1 mois) pour permettre à vos élèves d'accéder aux corrections des exercices verrouillés.</p>
+              <p style="font-size:0.9em; color:#555;">Ce mot de passe ne permet que d'ouvrir les exercices verrouillés : la création d'exercices reste réservée aux professeurs.</p>
+              <div class="proposer-form">
+                <label for="mdpEleveCodeProf">Votre code utilisateur</label>
+                <input type="password" id="mdpEleveCodeProf" placeholder="Entrez votre code utilisateur">
+                <label for="mdpEleveValeur" style="margin-top:10px;">Mot de passe pour mes élèves</label>
+                <input type="text" id="mdpEleveValeur" placeholder="Mot de passe (6 caractères min.)">
+                <div class="proposer-actions-inline" style="margin-top:10px;">
+                  <button type="button" class="nav-item nav-btn" onclick="genererMdpEleve()">Enregistrer</button>
+                </div>
+                <p id="messageMdpEleve" style="margin-top:10px;"></p>
+              </div>
+            </div>
+          </div>
+          <!-- Panel exercices -->
+          <div id="panel-exercices" class="menu-panel" data-title="Recherche d'exercices" style="display:none;"></div>
+          
+          <!-- Panel proposer -->
+          <div id="panel-proposer" class="menu-panel" data-title="Proposer un exercice" style="display:none;">
+            <div id="proposerEtapeCode">
+              <p>Pour proposer un exercice, entrez votre code utilisateur.</p>
+              <div class="proposer-form">
+                <label for="verificationCodeUtilisateur">Code utilisateur</label>
+                <input type="password" id="verificationCodeUtilisateur" placeholder="Entrez votre code utilisateur">
+                <div class="proposer-actions-inline">
+                  <button type="button" class="nav-item nav-btn" onclick="verifierCodeUtilisateur()">Valider</button>
+                  <button type="button" class="nav-item nav-btn" onclick="showMenuPanel('panel-obtenir-code'); resetObtenirCodePanel();">Obtenir un code utilisateur</button>
+                </div>
+              </div>
+              <p id="messageVerificationCode" style="margin-top:10px;"></p>
+            </div>
+            <div id="proposerEtapeFormulaire" style="display:none;">
+              <p>Code utilisateur reconnu. Vous pouvez maintenant proposer votre exercice.</p>
+              <div class="proposer-form">
+                <div class="checkbox-field">
+                  <input type="checkbox" id="proposerAccesRestreint">
+                  <label for="proposerAccesRestreint">Téléchargement limité aux professeurs</label>
+                </div>
+                <label for="proposerNiveau">Niveau</label>
+                <select id="proposerNiveau">
+                  <option value="debutant">Débutant</option>
+                  <option value="premiere">Première — bases</option>
+                  <option value="premiere2">Première — avancé</option>
+                  <option value="terminale">Terminale — bases</option>
+                  <option value="terminale2">Terminale — avancé</option>
+                  <option value="BAC">BAC</option>
+                  <option value="superieur">Supérieur</option>
+                  <option value="expert">Expert</option>
+                </select>
+                <label for="proposerDescriptif">Descriptif</label>
+                <textarea id="proposerDescriptif" rows="3" placeholder="Exemple : Exercice sur les permissions Linux"></textarea>
+                <textarea id="proposerLien" rows="3" hidden></textarea>
+                <button type="button" class="nav-item nav-btn" onclick="envoyerPropositionExercice()">Envoyer</button>
+              </div>
+            </div>
+            <div id="proposerEtapeInscription" style="display:none;">
+              <p>Vous n'avez pas de code utilisateur, ou votre code n'a pas été reconnu.</p>
+              <div class="proposer-form">
+                <button type="button" class="nav-item nav-btn" onclick="showMenuPanel('panel-obtenir-code'); resetObtenirCodePanel();">Obtenir un code utilisateur</button>
+              </div>
+              <p id="messageInscriptionExercice" style="margin-top:10px;"></p>
+            </div>
+          </div>
+
+        </div>
+        <div class="menu-modal-footer">
+          <button class="nav-item nav-btn" type="button" onclick="hideMenuPanels()">Fermer</button>
+        </div>
+      </div>
+    </div>
+    <!-- fin menu -->
+
+    <!-- Lien généré -->
+    <div style="margin-top:8px;">
+      <input type="text" id="generatedLink" readonly style="width:100%; font-family:monospace; display:none;" placeholder="Le lien apparaîtra ici..." />
+    </div>
+
+    <!-- ══════════════════════════════════════
+         BARRE D'OUTILS
+    ══════════════════════════════════════ -->
+    <div class="main-toolbar">
+      <div class="toolbar-group">
+        <button id="newFileButton" class="icon-btn" type="button" title="Nouveau fichier">New</button>
+        <button id="openPyButton" class="icon-btn" type="button" title="Ouvrir un exercice Linux">📂</button>
+        <button id="savePyButton" class="icon-btn" type="button" title="Enregistrer">💾</button>
+      </div>
+      <div class="toolbar-group">
+        <button id="generateLinkButton" class="icon-btn" type="button" title="Partager via un lien">
+          <svg viewBox="0 0 24 24" class="share-svg">
+            <circle cx="18" cy="5" r="3"></circle>
+            <circle cx="6" cy="12" r="3"></circle>
+            <circle cx="18" cy="19" r="3"></circle>
+            <line x1="8.6" y1="13.5" x2="15.4" y2="17.5"></line>
+            <line x1="15.4" y1="6.5" x2="8.6" y2="10.5"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="toolbar-group">
+        <button id="pagesPrevButton" class="icon-btn" type="button" title="Page précédente" style="display:none;">⬅</button>
+        <span id="pagesMultiplesIndicator" class="page-indicator" title="Page actuelle / nombre total de pages" style="display:none;">1/1</span>
+        <button id="pagesNextButton" class="icon-btn" type="button" title="Page suivante" style="display:none;">➡</button>
+        <button id="pagesAddButton" class="icon-btn" type="button" title="Ajouter une page">➕</button>
+        <button id="pagesRemoveButton" class="icon-btn" type="button" title="Supprimer la page">✂</button>
+      </div>
+      <div class="toolbar-group">
+        <button id="themeButton" class="icon-btn" type="button" title="Changer le thème du terminal">🎨</button>
+        <button id="clearButtonCode" class="icon-btn" type="button" title="Se déconnecter et effacer le terminal">🧹</button>
+        <button id="zoomButton" class="icon-btn" type="button" title="Zoom du texte" style="display:none;">🔍</button>
+        <button id="cssButton" class="icon-btn" type="button" title="Style CSS global du notebook">CSS</button>
+         <button id="graphPanelButton" class="icon-btn" type="button" title="Générer un graphe ou un arbre (Dariush-Mermaid)">
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+    <circle cx="5" cy="6" r="2.1"></circle>
+    <circle cx="19" cy="8" r="2.1"></circle>
+    <circle cx="12" cy="18" r="2.1"></circle>
+    <line x1="6.7" y1="7.4" x2="10.6" y2="16.1"></line>
+    <line x1="7" y1="6.4" x2="16.9" y2="7.6"></line>
+    <line x1="17.5" y1="9.7" x2="13.3" y2="16.1"></line>
+  </svg>
+        </button>
+      
+      </div>
+      <input type="file" id="openPyFile" accept=".dpy,.txt" style="display:none">
+    </div>
+
+    <!-- Panel zoom -->
+    <div id="zoomPanel" class="zoom-panel hidden">
+      <div class="zoom-panel-header">
+        <span></span>
+        <button id="zoomCloseButton" class="zoom-close-btn" title="Fermer">✕</button>
+      </div>
+      <div class="zoom-panel-row">
+        <button id="zoomOutButton" class="zoom-mini-btn" type="button">−</button>
+        <input id="zoomRange" type="range" min="10" max="40" step="1" value="14">
+        <button id="zoomInButton" class="zoom-mini-btn" type="button">+</button>
+        <span id="zoomPercentLabel" class="zoom-percent">100%</span>
+      </div>
+      <div class="zoom-help">Raccourci clavier : molette + Ctrl</div>
+    </div>
+
+    <!-- Panel CSS -->
+    <div id="cssPanel" class="css-panel hidden">
+      <div class="css-panel-header">
+        <strong>Style global des cellules markdown</strong>
+        <button id="cssCloseButton" class="zoom-close-btn" title="Fermer">✕</button>
+      </div>
+      <div class="css-panel-help">
+        Autorisé : sélecteurs de balises simples (h1, h2, p, ul, li, table, code, pre, img, a…)<br>
+        Non géré : classes, identifiants, pseudo-classes, @media.
+      </div>
+       <textarea id="cssTextarea" class="css-textarea" spellcheck="false">
+	  
+h1, h2, h3, h4 {padding: 0.3em;border-top: solid 1px;border-bottom: solid 3px;}
+h1 {background-color: rgba(255, 0, 0, 0.1);}
+h2 {background-color: rgba(0, 0, 255, 0.1);}
+h3 {background-color: rgba(0, 255, 0, 0.1);}
+
+.texte-rouge {
+  color: #c0392b;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.boite-info {
+  background-color: #eaf4fb;
+  border-left: 4px solid #2980b9;
+  padding: 12px 16px;
+  border-radius: 4px;
+}
+
+.badge-succes {
+  background-color: #27ae60;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+css.badge-stop {
+  background-color: #e74c3c;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: bold;
+}
+      </textarea>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         ZONE PRINCIPALE
+    ══════════════════════════════════════ -->
+    <div id="zoneLinux">
+
+     <!-- ══════════════════════════════════════
+           MARKDOWNS MULTIPLES
+           Conteneur des blocs markdown générés dynamiquement.
+           (Linux : boutons +/✂/↑/↓ masqués par CSS → mono-markdown par page)
+      ══════════════════════════════════════ -->
+      <div id="markdownsContainer"></div>
+
+      <!-- Zone markdown (ANCIEN système, mono-bloc) -->
+      <div class="comment-toolbar">
+        <button id="previewToggleBtn" class="comment-toggle-btn" type="button" title="Masquer le texte">—</button>
+      </div>
+      <div id="fenetrescommentaires" class="exercise-text-wrap" style="display:inline;">
+        <textarea id="exerciseText" class="exercise-text" rows="1" spellcheck="false"
+          placeholder="Description de l'exercice Linux (Markdown supporté)"></textarea>
+        <div id="exercisePreview" class="exercise-preview hidden" tabindex="0" title="Cliquer pour modifier"></div>
+      </div>
+
+      <!-- Chat groupe -->
+      <div id="groupChatZone" style="display:none;">
+        <textarea id="groupChatDisplay" class="group-chat-display" rows="2" readonly
+          placeholder="Les messages du groupe apparaîtront ici..."></textarea>
+        <div class="group-chat-input-row">
+          <input id="groupChatInput" class="group-chat-input" type="text" placeholder="Nouveau message..." maxlength="500" />
+          <button id="groupChatSendBtn" class="group-chat-send-btn" type="button">Envoyer</button>
+        </div>
+      </div>
+
+      <!-- Chat aide -->
+      <div id="aideChatZone" style="display:none;">
+        <textarea id="aideChatMessages" class="group-chat-display" readonly placeholder="Les messages apparaîtront ici…"></textarea>
+        <div class="group-chat-input-row">
+          <input type="text" id="aideChatInput" class="group-chat-input" placeholder="Votre message…" autocomplete="off" />
+          <button id="aideBtnEnvoyerMsg" class="group-chat-send-btn" type="button">Envoyer</button>
+        </div>
+      </div>
+
+      <!-- Terminal Linux (vrai terminal de l'élève) -->
+      <div id="terminalContainer"></div>
+
+      <!-- ══════════════════════════════════════
+           FAUX TERMINAL DU PROF — miroir du PTY de l'élève
+           Visible uniquement quand le prof a un élève actif.
+           Sinon caché par display:none.
+      ══════════════════════════════════════ -->
+      <div id="terminalContainerAideWrap" style="display:none; margin-top:10px;">
+        <div style="font-size:13px; color:#444; margin-bottom:4px;">
+          <strong>👁️ Terminal de l'élève</strong>
+          <span id="aideTerminalEleveLabel" style="color:#888;"></span>
+        </div>
+        <div id="terminalContainerAide"></div>
+      </div>
+
+    </div>
+
+    <!-- ══════════════════════════════════════
+         BOUTONS FLOTTANTS
+    ══════════════════════════════════════ -->
+
+<!-- Désactivé pour Dariush Linux : groupe et aide
+
+
+    <button type="button" id="boutonmenuconnexion" onclick="change_connexion()">Travail en groupe</button>
+   
+  -->
+
+<!-- Bouton flottant Aide (le bouton "Travail en groupe" reste désactivé pour Linux) -->
+    <button type="button" id="boutonAide">Aide</button>
+    <div id="aideToast"></div>
+
+
+  </div>
+  <!-- fin .container -->
+
+  <!-- ══════════════════════════════════════
+       PANNEAU TRAVAIL EN GROUPE
+  ══════════════════════════════════════ -->
+  <div id="connexion" class="group-panel">
+    <div class="group-header">
+      <strong>Travail en groupe</strong>
+      <button id="closeConnexionPanel" class="group-close-btn" type="button" aria-label="Fermer">✕</button>
+    </div>
+    <div class="group-body">
+      <div id="groupLoginForm" class="group-login-form">
+        <div class="group-inputs-row">
+          <input id="pseudo" placeholder="Pseudo (ex: Toto)" />
+          <input id="code" placeholder="Code de séance (ex: ClasseT106)" />
+        </div>
+        <div class="rolebox">
+          <div class="role-title">Je me connecte en :</div>
+          <label class="role-option"><input type="radio" name="role" value="teacher" checked /><span>Prof/Admin</span></label>
+          <label class="role-option"><input type="radio" name="role" value="student" /><span>Élève/Participant</span></label>
+        </div>
+      </div>
+      <div id="groupConnectedStatus" class="group-connected-status" style="display:none;">
+        <p id="groupIdentity" class="group-identity"></p>
+        <div class="group-status-row">
+          <span class="group-status-dot"></span>
+          <span id="status" class="group-status-label ok">Pas connecté.</span>
+          <span id="presenceCount" class="group-presence-count">Connectés : 0</span>
+        </div>
+      </div>
+      <div id="adminPanel" class="admin-panel" style="display:none;">
+        <label class="group-edit-label">Autorisation de modification :</label>
+        <select id="editSelect" class="group-edit-select">
+          <option value="none">1 : non</option>
+          <option value="all">2 : tous</option>
+        </select>
+      </div>
+      <div class="group-actions-row">
+        <button id="join" type="button">Connexion</button>
+        <button id="leave" type="button" disabled>Quitter</button>
+        <button id="requestEdit" type="button" style="display:none;">Demander autorisation de modification</button>
+      </div>
+      <div id="audioGroupeZone" style="display:none;">
+        <button id="audioBtnGroupe" type="button" style="display:none;">🎤 Micro actif</button>
+      </div>
+      <p id="typingInfo" class="group-msg-muted"></p>
+      <p id="editRequestMsg" class="group-msg-muted"></p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       PANNEAU IA
+  ══════════════════════════════════════ -->
+  <button id="openIaPanel" class="ia-fab" type="button">🤖 IA</button>
+  <div id="iaPanel" class="ia-panel">
+  <div class="ia-header">
+    <div class="ia-header-left">
+      <strong>Assistant IA</strong>
+      <select id="iaProvider" class="ia-provider-select">
+        <option value="">Groq gratuit (mais limité)</option>
+        <option value="deepseek">DeepSeek</option>
+        <option value="openai">ChatGPT / OpenAI</option>
+        <option value="anthropic">Claude / Anthropic</option>
+        <option value="mistral">Mistral</option>
+        <option value="groq">Groq (votre clé)</option>
+        <option value="gemini">Gemini / Google</option>
+      </select>
+    </div>
+    <button id="closeIaPanel" class="ia-close-btn" type="button" aria-label="Fermer le panneau IA">✕</button>
+  </div>
+  <div class="ia-body">
+
+    <!-- Zone historique Q/R -->
+    <div id="iaHistorique" class="ia-historique"></div>
+
+    <!-- Input question cours -->
+    <div class="ia-cours-row">
+      <input type="text" id="iaCoursInput"
+        placeholder="Pose ta question de cours ici..." autocomplete="off" />
+      <button id="iaCoursBtn" class="ia-cours-btn" type="button">🎓 Assistance cours</button>
+    </div>
+
+    <!-- Zone clé API — apparaît seulement quand un moteur payant est choisi -->
+    <div id="iaConnectZone" class="ia-connect-zone" style="display:none;">
+      <label for="iaApiKey">Entrer votre clé API :</label>
+      <input type="password" id="iaApiKey"
+        placeholder="Colle ici ta clé API" autocomplete="off" />
+      <div class="ia-connect-actions">
+        <button id="iaConnectBtn" class="ia-main-btn" type="button">Valider la clé</button>
+        <button id="iaCancelBtn" class="ia-cancel-btn" type="button">Annuler</button>
+      </div>
+      <p class="ia-connect-hint">Ces 3 boutons nécessitent votre propre clé API.</p>
+    </div>
+
+    <div id="iaStatus" class="ia-status"></div>
+
+    <!-- 3 boutons prof (actifs seulement après validation d'une clé) -->
+    <div class="ia-tools-row">
+      <button id="iaCorrectBtn" class="ia-tool-btn ia-tool-locked" type="button"
+        title="Nécessite une clé API">🤖 Corriger le code</button>
+      <button id="iaGenerateBtn" class="ia-tool-btn ia-tool-locked" type="button"
+        title="Nécessite une clé API">🤖 Générer une fonction</button>
+      <button id="iaExplainBtn" class="ia-tool-btn ia-tool-locked" type="button"
+        title="Nécessite une clé API">🤖 Correction + explications</button>
+    </div>
+
+  </div>
+</div>
+
+  <!-- ══════════════════════════════════════
+       PANNEAU AIDE
+  ══════════════════════════════════════ -->
+  <div id="panneauAide" class="group-panel">
+    <div class="group-header">
+      <strong>Demander de l'aide</strong>
+      <button id="aideBtnFermer" class="group-close-btn" type="button" aria-label="Fermer">✕</button>
+    </div>
+    <div class="group-body">
+      <p class="group-msg-muted" style="color:#a66a00; font-weight:600;">⚠ Seul le terminal est partagé, pas les textes (markdowns).</p>
+      <div id="aidePanelConnexion">
+        <div class="group-inputs-row">
+          <input type="text" id="aidePseudoInput" placeholder="Pseudo" />
+          <input type="text" id="aideCodeInput" placeholder="Code d'aide (ex: aide2026)" />
+        </div>
+        <div class="rolebox">
+          <div class="role-title">Je me connecte en :</div>
+          <label class="role-option"><input type="radio" name="aideRole" value="eleve" checked /><span>Élève (je demande de l'aide)</span></label>
+          <label class="role-option"><input type="radio" name="aideRole" value="prof" /><span>Professeur (je gère les aides)</span></label>
+        </div>
+        <div class="group-actions-row">
+          <button id="aideBtnConnexion" type="button">Connexion</button>
+        </div>
+      </div>
+      <div id="aidePanelProf" style="display:none;">
+        <div class="group-inputs-row" style="align-items:center; margin-bottom:10px;">
+          <label style="font-weight:600; font-size:14px;">Élève à aider :</label>
+          <select id="aideSelectEleve" class="group-edit-select">
+            <option value="">-- Aucun élève en attente --</option>
+          </select>
+        </div>
+        <div id="aideFileAttente" class="group-msg-muted"><em>Aucun élève en attente.</em></div>
+        <div class="group-actions-row">
+          <button id="aideBtnTerminer" type="button">✔ Terminer cette aide</button>
+          <button id="aideBtnQuitterProf" type="button">✕ Quitter la session</button>
+        </div>
+      </div>
+      <div id="aidePanelEleve" style="display:none;">
+        <div class="group-actions-row">
+          <button id="aideBtnQuitterEleve" type="button">✕ Quitter</button>
+        </div>
+      </div>
+      <p id="aideStatut" class="group-msg-muted"></p>
+      <div id="audioAideZone" style="display:none;">
+        <button id="audioBtnAide" type="button" style="display:none;">🎤 Micro actif</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       MODALES COMMUNES
+  ══════════════════════════════════════ -->
+
+  <!-- Navigation pages bas de page -->
+  <div id="bottomPageNav" class="bottom-page-nav " aria-label="Navigation entre les pages">
+    <button id="bottomPrevPageButton" type="button" class="nav-item nav-btn">◀ Prec</button>
+    <span id="bottomPageNavIndicator" class="bottom-page-nav-indicator">1/1</span>
+    <button id="bottomNextPageButton" type="button" class="nav-item nav-btn">Suiv ▶</button>
+  </div>
+
+  <!-- Modal code exercice restreint -->
+  <div id="modalExerciceRestreint" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:99999; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:8px; padding:24px; width:320px; box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+      <p style="margin:0 0 12px; font-weight:bold;">Exercice réservé aux enseignants</p>
+      <p style="margin:0 0 12px; font-size:0.9em; color:#555;">Entrez votre code utilisateur :</p>
+      <input type="password" id="inputCodeRestreint" placeholder="Code utilisateur"
+        style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #ccc; border-radius:4px; margin-bottom:8px;">
+      <p id="messageCodeRestreint" style="margin:4px 0 8px; font-size:0.85em; min-height:1.2em;"></p>
+      <div style="display:flex; gap:8px; justify-content:flex-end;">
+        <button type="button" class="nav-item nav-btn" id="btnAnnulerRestreint">Annuler</button>
+        <button type="button" class="nav-item nav-btn" id="btnValiderRestreint">Valider</button>
+      </div>
+    </div>
+  </div>
+
+<!-- Modale vidéo aide -->
+<div id="videoAideOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:13000; display:none; align-items:center; justify-content:center;" onclick="fermerVideoAide(event)">
+  <div style="background:#fff; border-radius:12px; padding:20px; max-width:700px; width:95%; position:relative;">
+    <button onclick="fermerVideoAide(null)" style="position:absolute; top:10px; right:14px; background:none; border:none; font-size:24px; cursor:pointer; color:#333;">✕</button>
+    <p id="videoAideTitre" style="font-weight:600; margin:0 0 12px; font-size:16px;"></p>
+    <video id="videoAidePlayer" controls style="width:100%; border-radius:8px; max-height:400px;" src=""></video>
+  </div>
+</div>
+
+
+<div id="graphModalOverlay" class="graph-modal-overlay">
+  <div class="graph-modal-window" id="graphModalWindow">
+    <div class="graph-modal-bar" id="graphModalBar">
+      <span class="graph-modal-title" id="graphModalTitle">Dariush-Code-Graphe</span>
+      <span class="graph-modal-info" id="graphModalInfo">Génère du <b>code</b> (Mermaid + Python).</span>
+      <button id="graphSwitchButton" class="graph-switch-btn" type="button">🖼️ Besoin d'une image ? Ouvrir Dariush-Graphe</button>
+      <button id="graphModalClose" class="graph-modal-close" type="button" title="Fermer">✕</button>
+    </div>
+    
+    <iframe id="graphModalFrame" title="Dariush-Code-Graphe" allow="clipboard-write"></iframe>
+  </div>
+</div>
+
+
+  <script>
+  var mode_Local_html = false;
+  document.write(
+    '<scr' + 'ipt src="' +
+    (mode_Local_html
+      ? 'http://localhost:3000/socket.io/socket.io.js'
+      : 'https://dariush-node.physalgo.fr/socket.io/socket.io.js') +
+    '"></scr' + 'ipt>'
+  );
+</script>
+
+</body>
+</html>

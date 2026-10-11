@@ -1,0 +1,61 @@
+# ============================================================================
+#  Dariush — fichiers non versionnes
+#  Ces fichiers existent sur le poste de developpement ou sur le serveur,
+#  mais ne font pas partie du depot.
+# ============================================================================
+
+# --- Dependances installables (npm install les regenere) -------------------
+node_modules/
+
+# --- Gros binaires : videos d'aide, wheels Pyodide, archive portable -------
+# Contenu fige et trop volumineux pour le depot.
+Dariush_Commun/videos/
+**/fichiersannexes/pyodide/
+**/fichiersannexes/telecharge/
+*.zip
+*.mp4
+
+# --- Distribution portable (copie complete de l'appli, flag MODE_PORTABLE) --
+Dariush_Python/Dariush_Portable/
+
+# --- Sauvegardes manuelles : remplacees par l'historique git ----------------
+**/sauvegarde_avant_markdownsmultiples24mai/
+Dariush_Commun/sauvegardePHP21juin2026/
+Dariush_Python/sauvegardephp/
+Dariush_Python/sauvegardevieuxjs/
+Dariush_Python/versioncssjs38/
+Dariush_Python/versioncssjs40/
+Dariush_Python/Versioncssjs41/
+Dariush_Python/apiasupprimer/
+Dariush_Python/zone de tests/
+Dariush_Python/fichiers css que j importe/
+
+# --- Copies ponctuelles de fichiers ----------------------------------------
+* - Copie.*
+*_copie*.js
+*copie*.js
+*Copie*.js
+Vieux*.php
+server - versioninitiale.js
+linux_record.txt
+
+# --- Systeme / editeur -----------------------------------------------------
+Thumbs.db
+desktop.ini
+.DS_Store
+*.swp
+*~
+.vscode/
+.idea/
+
+# --- Secrets : identifiants et cles API ------------------------------------
+# Le modele documente (.env.exemple) est versionne, jamais le .env reel.
+.env
+.env.*
+!.env.exemple
+
+# --- Fichiers verrous LibreOffice (crees quand un .odt est ouvert) ---------
+.~lock.*#
+
+# --- Notes de travail personnelles : jamais publiees --------------------------
+docs pour dariush python et server/

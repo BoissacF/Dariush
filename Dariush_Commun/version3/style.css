@@ -1,0 +1,3367 @@
+/* ===== Titre ===== */
+
+
+
+
+.title {
+  color: #333;
+  margin: 0 0 6px 0;
+}
+
+/* ===== Plein écran ===== */
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  background-color: #f5f5f5;
+}
+
+#pseudo {
+  min-width: 180px;
+}
+
+#code {
+  min-width: 320px;
+}
+
+/* ===== Conteneur plein écran ===== */
+.container {
+  width: 100%;
+  max-width: none;
+  height: 100vh;
+  min-height: 0;
+  margin: 0;
+  background-color: white;
+  padding: 16px;
+  border-radius: 0;
+  box-shadow: none;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== Sous-titre ===== */
+.subtitle {
+  margin: 2px 0 10px 0;
+  font-size: 13px;
+  font-style: italic;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Bouton "Home" intégré au sous-titre */
+.home-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  text-decoration: none;
+  background: #2f6feb;
+  color: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  transition: background 0.15s ease, transform 0.05s ease, opacity 0.15s ease;
+}
+
+.home-btn:hover {
+  background: #9aa0a6;
+}
+
+.home-btn:active {
+  transform: translateY(1px);
+}
+
+.home-btn:focus {
+  outline: 2px solid rgba(47, 111, 235, 0.35);
+  outline-offset: 2px;
+}
+
+/* ===== Zone principale ===== */
+#zonePython {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+/* ===== 2 colonnes redimensionnables ===== */
+.two-cols {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(420px, 1fr) 10px minmax(120px, 1fr);
+  align-items: stretch;
+  gap: 0;
+}
+
+.left-col,
+.right-col {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.left-col {
+  padding-right: 10px;
+}
+
+.right-col {
+  padding-left: 10px;
+}
+
+.col-resizer {
+  position: relative;
+  cursor: col-resize;
+  user-select: none;
+  touch-action: none;
+  min-height: 400px;
+}
+
+.col-resizer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background: #c9d2dc;
+  border-radius: 2px;
+}
+
+.col-resizer:hover::before,
+.two-cols.is-dragging .col-resizer::before {
+  background: #2f6feb;
+}
+
+/* ===== Éditeur ===== */
+.editor-container {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* CodeMirror prend l'espace restant */
+
+
+/*enleve le carré rose merdique pour les pretendues erreurs  */
+.cm-error {
+  background: none !important;
+  
+}
+.CodeMirror {
+  flex: 0 0 auto;
+  height: auto;
+  min-height: 6em;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.CodeMirror-scroll {
+  overflow-y: hidden;
+  overflow-x: auto;
+}
+/*
+.CodeMirror {
+  flex: 1 1 auto;
+  height: 100% !important;
+  min-height: 200px !important;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.CodeMirror-scroll {
+  overflow-y: scroll !important;
+}*/
+
+/* ===== Output ===== */
+.output {
+  background-color: #f8f8f8;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 15px;
+  flex: 1 1 auto;
+  min-height: 200px;
+  overflow: auto;
+  font-family: monospace;
+  white-space: pre-wrap;
+}
+
+.loading {
+  color: #666;
+  font-style: italic;
+}
+
+/* ===== Zone p5 ===== */
+#graphicsOutput {
+  border: 1px solid #ddd;
+  margin-top: 15px;
+  background-color: #fff;
+  display: flex;
+  justify-content: center;
+}
+
+/* ===== Responsive mobile ===== */
+@media (max-width: 460px) {
+  .two-cols {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .col-resizer {
+    display: none;
+  }
+
+  .left-col,
+  .right-col {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .editor-container {
+    min-height: 250px;
+  }
+
+  .CodeMirror {
+    min-height: 250px !important;
+  }
+}
+
+/* ===== Boutons : style global ===== */
+button {
+  background: #2f6feb;
+  color: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 7px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  transition: background 0.15s ease, transform 0.05s ease, opacity 0.15s ease;
+  align-self: flex-start;
+}
+
+button:hover {
+  background: #9aa0a6;
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Boutons sous le titre */
+.top-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 10px 0 18px;
+}
+
+/* ===============================
+   menu connexion
+================================= */
+
+.muted {
+  color: #666;
+  font-size: 14px;
+}
+
+.ok {
+  color: #0a7;
+}
+
+.warn {
+  color: #a60;
+}
+
+/* ===============================
+   Layout
+================================= */
+
+.row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 12px 0;
+}
+
+/* ===============================
+   Inputs / boutons
+================================= */
+
+input[type="text"],
+input[type="radio"] {
+  font-size: 16px;
+}
+
+input[type="text"],
+#code {
+  padding: 10px;
+  min-width: 320px;
+}
+
+/* ===============================
+   Bloc choix rôle
+================================= */
+
+/* ===============================
+   Rolebox (formulaire connexion)
+================================= */
+
+.rolebox {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: #fafafa;
+  margin: 12px 0;
+}
+
+.role-title {
+  font-size: 14px;
+  color: #555;
+  margin-right: 10px;
+}
+
+.role-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.role-option input[type="radio"] {
+  transform: scale(1.2);
+  cursor: pointer;
+}
+
+/* ===============================
+   Panneau groupe — layout général
+================================= */
+
+.group-login-form {
+  margin-bottom: 10px;
+}
+
+.group-inputs-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.group-inputs-row input {
+  width: 160px;
+  padding: 10px;
+  font-size: 16px;
+}
+
+/* ── Statut connecté ── */
+.group-connected-status {
+  margin-bottom: 10px;
+}
+
+.group-status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.group-status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #0a7;
+  flex-shrink: 0;
+}
+
+.group-status-label {
+  font-size: 14px;
+}
+
+.group-status-label.ok {
+  color: #0a7;
+}
+
+.group-status-label.warn {
+  color: #a60;
+}
+
+.group-presence-count {
+  font-size: 14px;
+  color: #666;
+}
+
+.group-identity {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 6px 0;
+}
+
+/* ── Admin panel : select édition ── */
+.admin-panel {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: #f4f4f4;
+}
+
+.group-edit-label {
+  display: block;
+  font-size: 14px;
+  color: #444;
+  margin-bottom: 6px;
+}
+
+.group-edit-select {
+  width: auto;
+  min-width: 180px;
+  padding: 6px 8px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+  color: #333;
+  cursor: pointer;
+}
+
+/* ── Boutons actions ── */
+.group-actions-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 12px 0;
+}
+
+/* ── Messages ── */
+.group-msg-muted {
+  color: #666;
+  font-size: 14px;
+  margin: 4px 0;
+  min-height: 18px;
+}
+
+/* ── Badge gardé pour compatibilité ── */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: #e0e0e0;
+  margin-left: 8px;
+}
+
+/* ===== Bouton flottant IA ===== */
+.ia-fab {
+  position: fixed;
+  right: 10px;
+  bottom: 20px;
+  z-index: 9999;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 18px;
+  cursor: pointer;
+  font-size: 16px;
+  background: #2f6feb;
+  color: #fff;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===== Panneau IA ===== */
+.ia-panel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9998;
+  background: #ffffff;
+  border-top: 1px solid #ccc;
+  box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.15);
+  padding: 0;
+  transform: translateY(100%);
+  transition: transform 0.25s ease;
+}
+
+.ia-panel.ia-open {
+  transform: translateY(0);
+}
+
+.ia-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid #e5e5e5;
+  background: #f7f7f7;
+}
+
+.ia-close-btn {
+  border: none;
+  background: transparent;
+  color: #2f6feb;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 8px;
+  align-self: auto;
+}
+
+.ia-close-btn:hover {
+  background: transparent;
+  color: #1f4fa8;
+}
+
+.ia-body {
+  padding: 16px 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ia-body label {
+  font-weight: 600;
+}
+
+.ia-body select,
+.ia-body input {
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #bbb;
+  border-radius: 8px;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.ia-connect-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.ia-connect-row label {
+  margin-right: 4px;
+}
+
+.ia-main-btn,
+.ia-tool-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.ia-main-btn {
+  background: #2f6feb;
+  color: #fff;
+}
+
+.ia-main-btn:hover {
+  background: #1f4fa8;
+}
+
+.ia-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.ia-tool-btn {
+  background: #efefef;
+  color: #222;
+}
+
+.ia-tool-btn:hover {
+  background: #dcdcdc;
+}
+
+.ia-status {
+  min-height: 20px;
+  font-size: 14px;
+}
+
+.ia-status.info {
+  color: #333;
+}
+
+.ia-status.success {
+  color: #0a7a31;
+}
+
+.ia-status.error {
+  color: #b00020;
+}
+
+/* ===== Responsive menu IA ===== */
+@media (max-width: 700px) {
+  .ia-fab {
+    right: 2px;
+    bottom: 12px;
+  }
+
+  .ia-connect-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ia-main-btn,
+  .ia-tool-btn {
+    width: 100%;
+  }
+}
+
+/* Barre de boutons compacte pour la colonne de gauche */
+.left-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+/* Boutons icône compacts */
+.icon-btn {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid #bfc7d1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #222;
+  font-size: 20px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.icon-btn:hover:not(:disabled) {
+  background: #f3f6fa;
+  border-color: #8fa7c0;
+  transform: translateY(-1px);
+}
+
+.icon-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.icon-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Bouton texte conservé pour "Générer un lien" */
+.text-btn {
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid #bfc7d1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #222;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.text-btn:hover {
+  background: #f3f6fa;
+  border-color: #8fa7c0;
+  transform: translateY(-1px);
+}
+
+/* =========================
+   MENU HAUT DE PAGE
+========================= */
+
+.top-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 50px;
+  padding: 4px 12px;
+  background: #e5e7eb;
+  border-bottom: 1px solid #c7ccd1;
+  box-sizing: border-box;
+}
+
+.top-bar-left {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.subtitle-inline {
+  font-size: 13px;
+  font-weight: 400;
+  color: #6b7280;
+}
+
+.top-bar-menu {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.top-bar-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  padding: 0;
+  border: 1px solid #bfc7d1;
+  border-radius: 8px;
+  background: #f3f4f6;
+  color: #4b5563;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  align-self: center;
+}
+
+.top-bar-toggle:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.nav-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid #bfc7d1;
+  background: #ffffff;
+  color: #222;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  box-sizing: border-box;
+}
+
+
+
+
+
+.nav-item:hover {
+  background: #f3f6fa;
+  border-color: #8fa7c0;
+  transform: translateY(-1px);
+}
+
+.nav-home {
+  text-decoration: none;
+  color: #222;
+}
+
+.nav-btn {
+  background: #ffffff;
+  color: #222;
+  align-self: auto;
+}
+
+.nav-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.nav-dropbtn {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid #bfc7d1;
+  background: #ffffff;
+  margin: 0;
+}
+
+.nav-dropbtn:hover {
+  background: #f3f6fa;
+  border-color: #8fa7c0;
+}
+
+.nav-dropdown-content {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 210px;
+  background: #ffffff;
+  border: 1px solid #d7dee7;
+  border-radius: 10px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+  padding: 6px;
+  z-index: 3000;
+}
+
+.nav-dropdown.open .nav-dropdown-content {
+  display: block;
+}
+
+.nav-dropdown-content button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: #ffffff;
+  color: #222;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.nav-dropdown-content button:hover {
+  background: #f3f6fa;
+}
+
+@media (max-width: 820px) {
+  .top-bar {
+    flex-wrap: nowrap;
+  }
+
+  .top-bar-left {
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .top-bar-toggle {
+    display: inline-flex;
+  }
+
+  .top-bar-menu {
+    display: none !important;
+
+    position: absolute;
+    top: 100%;
+    right: 10px;
+
+    width: 220px;
+    flex-direction: column;
+    gap: 6px;
+
+    background: #ffffff;
+    border: 1px solid #d7dee7;
+    border-radius: 10px;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.1);
+    padding: 6px;
+
+    z-index: 3000;
+  }
+
+  .top-bar-menu.open {
+    display: flex !important;
+  }
+
+  .top-bar-menu .nav-item {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+/* =========================
+   descriptifs des exercices
+========================= */
+
+.exercise-text-wrap {
+  /*margin: 10px 0 8px 0;*/
+   margin: 0; /* IMPORTANT */
+  border-top: none; /* fusion visuelle */
+}
+
+.exercise-text {
+  width: 100%;
+  min-height: 0;
+ /* max-height: 180px;*/
+  resize: vertical;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #cfcfcf;
+  border-radius: 0;
+  font-family: Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.4;
+  background: #fafafa;
+  color: #222;
+  transition: height 0.1s ease;
+}
+
+.exercise-text:focus {
+  outline: none;
+  border-color: #6b8cff;
+  box-shadow: 0 0 0 3px rgba(107, 140, 255, 0.15);
+  background: #fff;
+}
+
+/* =========================
+   panneau du travail en groupe
+========================= */
+
+/* ===== Bouton groupe flottant ===== */
+#boutonmenuconnexion {
+  position: fixed;
+  right: 100px;
+  bottom: 20px;
+  z-index: 9999;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 18px;
+  font-size: 16px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+/* ===== Panneau groupe caché par défaut ===== */
+.group-panel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9998;
+  background: #ffffff;
+  border-top: 1px solid #ccc;
+  box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.15);
+  padding: 0;
+  transform: translateY(100%);
+  transition: transform 0.25s ease;
+}
+
+.group-panel.group-open {
+  transform: translateY(0);
+}
+
+.group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid #e5e5e5;
+  background: #f7f7f7;
+}
+
+.group-close-btn {
+  border: none;
+  background: transparent;
+  color: #2f6feb;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 8px;
+  align-self: auto;
+}
+
+.group-close-btn:hover {
+  background: transparent;
+  color: #1f4fa8;
+}
+
+.group-body {
+  padding: 16px 18px 20px;
+  max-height: 60vh;
+  overflow: auto;
+}
+
+
+/* ===== Bouton aide flottant ===== */
+#boutonAide {
+  position: fixed;
+  right: 270px;
+  bottom: 20px;
+  z-index: 9999;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 18px;
+  font-size: 16px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+/* ===== Responsive boutons flottants ===== */
+@media (max-width: 700px) {
+  #boutonmenuconnexion {
+    right: 76px;
+    bottom: 12px;
+    font-size: 13px;
+    padding: 8px 12px;
+    height: 40px;
+  }
+
+  #boutonAide {
+    right: 210px;
+    bottom: 12px;
+    font-size: 13px;
+    padding: 8px 12px;
+    height: 40px;
+  }
+
+  .ia-fab {
+    right: 4px;
+    bottom: 12px;
+    height: 40px;
+  }
+}
+
+#aidePseudoInput {
+  min-width: 180px;
+  max-width: 180px;
+}
+
+#aideCodeInput {
+  min-width: 320px;
+  max-width: 320px;
+}
+/* ===== Toast aide (au-dessus du bouton Aide) ===== */
+#aideToast {
+  position: fixed;
+  bottom: 74px;
+  z-index: 10001;
+  max-width: 320px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  font-size: 14px;
+  line-height: 1.35;
+  color: #fff;
+  background: #e05c00;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+#aideToast.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+
+/* ================================
+   DOUBLE CONNEXION GROUPE + AIDE
+================================ */
+
+
+
+/* Pastille sur les boutons flottants */
+.btn-pastille {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  pointer-events: none;
+}
+
+.btn-pastille-bleu   { background: #2f6feb; }
+.btn-pastille-orange { background: #e05c00; }
+
+/* Les boutons flottants doivent être en position relative */
+#boutonmenuconnexion,
+#boutonAide {
+  position: fixed;
+}
+/* wrapper pour la pastille, ajouté via JS */
+.btn-pastille-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+/* ===== message du groupe pres du bouton ===== */
+
+.status-toast {
+  position: fixed;
+  right: 20px;
+  bottom: 74px;
+  z-index: 10001;
+  max-width: 320px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  font-size: 14px;
+  line-height: 1.35;
+  color: #fff;
+  background: #a66a00;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.status-toast.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.status-toast.ok {
+  background: #0a7a31;
+}
+
+.status-toast.warn {
+  background: #a66a00;
+}
+
+@media (max-width: 700px) {
+  .status-toast {
+    right: 12px;
+    bottom: 62px;
+    max-width: 260px;
+    font-size: 13px;
+    padding: 9px 12px;
+  }
+}
+
+/* =========================
+   Formulaire proposer exercice
+========================= */
+
+.proposer-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.proposer-form label {
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+.proposer-form textarea,
+.proposer-form input,
+.proposer-form select {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+/* Focus agréable */
+.proposer-form textarea:focus,
+.proposer-form input:focus,
+.proposer-form select:focus {
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 3px rgba(74, 144, 226, 0.4);
+}
+
+/* Textarea un peu plus confortable */
+.proposer-form textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+/* Bouton envoyer */
+.proposer-form button {
+  margin-top: 10px;
+  align-self: flex-start;
+}
+
+/* Ligne de séparation */
+#panel-proposer hr {
+  border: none;
+  border-top: 1px solid #ddd;
+}
+
+.proposer-actions-inline {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.form-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.form-row.align-bottom {
+  align-items: flex-end;
+}
+
+.form-field {
+  flex: 1;
+  min-width: 200px;
+}
+
+.form-field.small {
+  flex: 0 0 220px;
+}
+
+.checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.checkbox-field input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
+.checkbox-field label {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+@media (max-width: 700px) {
+  .form-field.small {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .checkbox-field {
+    width: 100%;
+    margin-top: 2px;
+  }
+}
+
+/* =========================
+   FENÊTRE MODALE DU MENU
+========================= */
+
+body.menu-modal-open {
+  overflow: hidden;
+}
+
+.menu-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  background: rgba(20, 27, 38, 0.42);
+  backdrop-filter: blur(2px);
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.menu-modal-window {
+  width: min(920px, calc(100vw - 32px));
+  max-height: min(94vh, 900px);
+  margin: 0 auto;
+  background: #ffffff;
+  border: 1px solid #d7dee7;
+  border-radius: 18px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.22);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: menuModalAppear 0.18s ease-out;
+}
+
+@keyframes menuModalAppear {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.menu-modal-header,
+.menu-modal-footer {
+  padding: 14px 18px;
+  background: #f7f9fc;
+}
+
+.menu-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid #e4eaf1;
+}
+
+.menu-modal-header h3 {
+  margin: 0;
+  font-size: 20px;
+  color: #111;
+}
+
+.menu-modal-body {
+  padding: 18px;
+  overflow: auto;
+}
+
+.menu-modal-footer {
+  border-top: 1px solid #e4eaf1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.menu-panel {
+  color: #222;
+}
+
+.menu-panel p,
+.menu-panel li {
+  color: #222;
+}
+
+.menu-panel a {
+  color: #2f6feb;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.menu-panel a:hover {
+  text-decoration: underline;
+}
+
+#resultatsExercices ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+#resultatsExercices li + li {
+  margin-top: 0px;
+}
+
+@media (max-width: 700px) {
+  .menu-modal-overlay {
+    padding: 10px;
+  }
+
+  .menu-modal-window {
+    width: 100%;
+    max-height: calc(100vh - 20px);
+    border-radius: 14px;
+  }
+
+  .menu-modal-header,
+  .menu-modal-body,
+  .menu-modal-footer {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}
+
+/* fenetre modal pour le pas a pas*/
+.debug-modal.hidden {
+  display: none;
+}
+
+.debug-modal {
+  position: fixed;
+  inset: 0;
+  pointer-events: none; /* laisse passer les clics derrière */
+  z-index: 13000;
+}
+
+.debug-modal-box {
+  position: absolute;
+  top: 80px;
+  left: 80px;
+  width: min(520px, 92vw);
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+
+  pointer-events: auto;
+
+  background: white;
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 12px 35px rgba(0,0,0,0.3);
+}
+.debug-modal-header {
+  flex: 0 0 auto;
+}
+
+.debug-step-content {
+  flex: 1 1 auto;
+  overflow: auto;
+  min-height: 0;
+  padding-right: 4px;
+}
+
+.debug-modal-actions {
+  flex: 0 0 auto;
+}
+#contextGlobalsBlock {
+  border-top: 1px solid #ddd;
+  padding-top: 8px;
+}
+.debug-step-content {
+  margin-top: 12px;
+  margin-bottom: 16px;
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 1.45;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.debug-section {
+  margin-bottom: 12px;
+}
+
+.debug-section-title {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.debug-vars-list {
+  margin-top: 6px;
+}
+
+.debug-vars-list,
+.debug-vars-list div,
+.debug-step-content div,
+.debug-step-content strong,
+.debug-step-content button {
+  margin-left: 0;
+  text-indent: 0;
+}
+
+.debug-context-block {
+  margin-top: 8px;
+}
+
+.debug-context-block .debug-vars-list {
+  display: block;
+}
+
+.debug-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.debug-modal-header {
+  cursor: move;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+  margin-bottom: 8px;
+  background: #dfe6ef;
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+
+
+/* ligne bleu du debuggeur dans le code*/
+.cm-debug-line {
+  background-color: rgba(0, 255, 255, 0.25);
+}
+
+/* bouton pas a pas*/
+.debug-icon-btn {
+  position: relative;
+}
+
+/* flèche principale (comme bouton run) */
+.debug-icon-btn .debug-play {
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* coccinelle superposée */
+.debug-icon-btn .debug-bug {
+  position: absolute;
+  left: 2px;
+  bottom: 2px;
+  font-size: 11px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* boton numero de page*/
+.debug-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.goto-group {
+  display: flex;
+  align-items: center;
+  gap: 6px; /* petit espace entre bouton et input */
+}
+
+#debugGoToLineInput {
+  width: 50px;
+  padding: 4px 6px;
+}
+
+/* affichage de la modal qui contient une image */
+.image-modal-box {
+  position: absolute;
+  top: 4vh;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(1200px, 96vw);
+  height: min(900px, 92vh);
+
+  pointer-events: auto; /* indispensable */
+
+  background: white;
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 12px 35px rgba(0,0,0,0.3);
+
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 700px) {
+  .image-modal-box {
+    width: 100vw;
+    height: 100vh;
+    top: 0;
+    left: 0;
+    transform: none;
+    border-radius: 0;
+  }
+}
+
+.image-modal-container {
+  flex: 1 1 auto;
+  overflow: auto;
+
+  display: flex;
+  align-items: center;      /* centre vertical */
+  justify-content: center;  /* centre horizontal */
+
+  padding: 10px;
+  cursor: zoom-in;
+}
+
+
+
+
+.image-modal-viewer {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  display: inline-block;
+}
+/*modal d importation*/
+.import-info-content {
+  white-space: pre-wrap;
+  font-family: monospace;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #222;
+}
+
+/* menu deroulant de la fenetre de debugage pas a pas */
+.debug-tree-block {
+  margin-top: 6px;
+}
+
+.debug-tree-title {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.debug-tree-empty {
+  font-style: italic;
+  color: #666;
+}
+
+.debug-tree-node {
+  margin: 2px 0;
+}
+
+.debug-tree-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+  margin: 2px 0;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.debug-tree-toggle {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  padding: 0;
+  border: 1px solid #c9d2dc;
+  border-radius: 4px;
+  background: #fff;
+  color: #222;
+  font-size: 12px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  pointer-events: auto;
+  flex: 0 0 auto;
+}
+
+.debug-tree-toggle:hover {
+  background: #f3f6fa;
+}
+
+.debug-tree-label {
+  font-weight: 600;
+  flex: 0 0 auto;
+}
+
+.debug-tree-sep {
+  color: #777;
+  flex: 0 0 auto;
+}
+
+.debug-tree-value,
+.debug-tree-summary {
+  font-family: monospace;
+  flex: 0 0 auto;
+}
+
+.debug-tree-type {
+  color: #666;
+  font-size: 12px;
+  flex: 0 0 auto;
+}
+
+.debug-tree-children {
+  margin-left: 0;
+  padding-left: 34px;
+  border-left: 1px solid #d8dee8;
+}
+
+/* debut transfo zone textarea en markdown jupyter*/
+.exercise-text.hidden {
+  display: none;
+}
+
+.exercise-preview {
+  width: 100%;
+  min-height: 0;
+  /*max-height: 180px;*/
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #cfcfcf;
+  border-radius: 0;
+  font-family: Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.4;
+  background: #fafafa;
+  color: #222;
+  cursor: text;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.exercise-preview > *:first-child {
+  margin-top: 0;
+}
+
+.exercise-preview > *:last-child {
+  margin-bottom: 0;
+}
+
+.exercise-preview img,
+.exercise-preview table,
+.exercise-preview pre {
+  max-width: 100%;
+}
+
+.exercise-preview img {
+  height: auto;
+}
+
+.exercise-preview table {
+  border-collapse: collapse;
+}
+
+.exercise-preview th,
+.exercise-preview td {
+  border: 1px solid #d8dee6;
+  padding: 6px 8px;
+}
+
+.exercise-preview pre {
+  overflow: auto;
+}
+
+.exercise-preview code {
+  font-family: monospace;
+}
+
+.exercise-text,
+.exercise-preview {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.exercise-preview:hover {
+  background: #ffffff;
+  border-color: #b8c7e6;
+}
+
+.exercise-preview:focus {
+  outline: none;
+  border-color: #6b8cff;
+  box-shadow: 0 0 0 3px rgba(107, 140, 255, 0.15);
+  background: #fff;
+}
+
+.exercise-preview.hidden {
+  display: none;
+}
+
+.exercise-preview.is-empty {
+  color: #888;
+  font-style: italic;
+}
+.exercise-md-h1,
+.exercise-md-h2,
+.exercise-md-h3,
+.exercise-md-p {
+  margin: 0;
+}
+
+.exercise-md-h1 {
+  font-size: 1.9em;   /* presque x2 */
+  font-weight: 800;
+  line-height: 1.2;
+  margin: 0 0 10px 0;
+}
+
+.exercise-md-h2 {
+  font-size: 1.45em;
+  font-weight: 750;
+  line-height: 1.25;
+  margin: 0 0 9px 0;
+}
+
+.exercise-md-h3 {
+  font-size: 1.2em;
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 0 0 7px 0;
+}
+
+.exercise-md-h4 {
+  font-size: 1.05em;  /* légèrement plus grand que texte normal */
+  font-weight: 700;
+  line-height: 1.35;
+  margin: 0 0 6px 0;
+}
+
+.exercise-md-p {
+  font-size: 1em;
+  margin: 0 0 6px 0;
+}
+
+.exercise-md-spacer {
+  height: 8px;
+}
+
+
+
+
+
+/* code inline */
+.exercise-md-code {
+  font-family: monospace;
+  background: #eef1f5;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 0.95em;
+}
+
+/* listes */
+.exercise-md-list {
+  margin: 6px 0 8px 18px;
+  padding: 0;
+}
+
+.exercise-md-list li {
+  margin: 3px 0;
+}
+.exercise-md-img-error {
+  color: #999;
+  font-style: italic;
+}
+.exercise-md-codeblock-wrap {
+  margin: 8px 0 10px 0;
+}
+
+.exercise-md-codeblock-label {
+  display: inline-block;
+  margin-bottom: 4px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #e9edf3;
+  color: #444;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
+.exercise-md-codeblock {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f3f5f7;
+  border: 1px solid #d8dee6;
+  overflow-x: auto;
+  white-space: pre;
+  font-family: monospace;
+  font-size: 0.95em;
+  line-height: 1.45;
+}
+
+.exercise-md-codeblock code {
+  
+  
+  
+  font-family: inherit;
+}
+
+
+
+/* barre d outils*/
+
+/* =========================
+   BARRE D'OUTILS PRINCIPALE
+========================= */
+
+.main-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0 14px 0;
+ /* padding: 8px 10px;*/
+   padding: 1px 8px;
+  min-height: auto;
+  align-items: center;
+  
+  
+  
+  background: #f3f4f6;
+  border: 1px solid #d4d9df;
+  border-radius: 12px;
+}
+
+.toolbar-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px;
+  background: #ffffff;
+  border: 1px solid #cfd6df;
+  border-radius: 10px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
+}
+
+.toolbar-group-run {
+  margin-left:0;
+}
+
+/* anciens blocs locaux devenus inutiles */
+.left-tools,
+.column-buttons {
+  display: contents;
+}
+
+/* boutons icône plus petits */
+.icon-btn {
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  padding: 0;
+  border: 1px solid #bcc5cf;
+  border-radius: 7px;
+  background: linear-gradient(to bottom, #ffffff, #f3f4f6);
+  color: #222;
+  font-size: 15px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: auto;
+}
+
+.icon-btn:hover:not(:disabled) {
+  background: #eef3f8;
+  border-color: #91a4b8;
+  transform: translateY(-1px);
+}
+
+/* bouton principal exécuter */
+.run-btn {
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid #bcc5cf;
+  border-radius: 8px;
+  background: linear-gradient(to bottom, #ffffff, #eef2f7);
+  color: #222;
+  font-size: 14px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: auto;
+}
+
+.run-btn:hover:not(:disabled) {
+  background: #eef3f8;
+  border-color: #91a4b8;
+}
+
+.run-btn span {
+  white-space: nowrap;
+}
+
+/* petit ajustement pour le bouton pas à pas */
+.debug-icon-btn .debug-play {
+  font-size: 14px;
+}
+
+.debug-icon-btn .debug-bug {
+  left: 1px;
+  bottom: 1px;
+  font-size: 8px;
+}
+
+/* responsive */
+@media (max-width: 900px) {
+  .toolbar-group-run {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 700px) {
+  .main-toolbar {
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .toolbar-group {
+    flex-wrap: wrap;
+  }
+}
+.share-svg {
+  width: 16px;
+  height: 16px;
+  stroke: #1f77d0;
+  stroke-width: 2;
+  fill: none;
+}
+
+.icon-btn:hover .share-svg {
+  stroke: #0b5cab;
+}
+
+
+/* bandeau pour contenir le bouton de fermeture ou d ouverture du commentaire*/
+/* ===== mini barre au-dessus des commentaires ===== */
+/* ===== mini barre ===== */
+.comment-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  height: 20px;
+  padding: 0 4px;
+
+  background: #f3f4f6;
+  border: 1px solid #d4d9df;
+  border-bottom: none;
+  border-radius:  0;
+}
+
+/* ===== bouton ultra compact et neutre ===== */
+.comment-toggle-btn {
+  all: unset; /*  SUPER IMPORTANT */
+
+  width: 15px;
+  height: 15px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #e5e7eb;
+  border: 1px solid #c5ccd6;
+  border-radius: 3px;
+
+  font-size: 10px;
+  color: #555;
+
+  cursor: pointer;
+}
+
+/* hover discret */
+.comment-toggle-btn:hover {
+  background: #dcdfe4;
+}
+
+/* optionnel : effet clic */
+.comment-toggle-btn:active {
+  background: #d1d5db;
+}
+
+/* fusion avec le bloc */
+#fenetrescommentaires {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-radius: 0;
+}
+
+
+/*LOUPE-/
+/* panneau zoom */
+.zoom-panel {
+  margin: -8px 0 10px 0;
+  padding: 8px 10px;
+  background: #f3f4f6;
+  border: 1px solid #d4d9df;
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  width: fit-content;
+  min-width: 280px;
+}
+
+.zoom-panel.hidden {
+  display: none;
+}
+
+.zoom-panel-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.zoom-mini-btn {
+  all: unset;
+  box-sizing: border-box;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #bcc5cf;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #222;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.zoom-mini-btn:hover {
+  background: #eef3f8;
+}
+
+#zoomRange {
+  width: 150px;
+}
+
+.zoom-percent {
+  min-width: 48px;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+
+.zoom-help {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #666;
+}
+/* header du panel */
+.zoom-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+/* bouton croix */
+.zoom-close-btn {
+  all: unset;
+  width: 18px;
+  height: 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 4px;
+  cursor: pointer;
+
+  color: #666;
+  font-size: 12px;
+}
+
+/* hover discret */
+.zoom-close-btn:hover {
+  background: #e5e7eb;
+  color: #222;
+}
+
+
+/*passage d une presentation horizontale a verticale*/
+#horizontalOutputWrap {
+  margin-top: 12px;
+  flex: 0 0 auto;
+}
+
+#outputhorizontal {
+  min-height: 160px;
+  max-height: 260px;
+}
+/* =========================
+   MODE AFFICHAGE HORIZONTAL
+========================= */
+
+.two-cols.horizontal-layout {
+  display: block;
+  overflow-y: visible;
+  min-height: 0;
+  height: auto;
+}
+
+.two-cols.horizontal-layout .left-col {
+  display: flex;
+  flex-direction: column;
+  min-height: auto;
+  height: auto;
+  padding-right: 0;
+}
+
+.two-cols.horizontal-layout .editor-container {
+  flex: 0 0 auto;
+  min-height: auto;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+}
+/*
+.two-cols.horizontal-layout .CodeMirror {
+  height: auto !important;
+  min-height: 6em !important;
+  flex: 0 0 auto !important;
+}
+
+.two-cols.horizontal-layout .CodeMirror-scroll {
+  overflow-y: hidden !important;
+  overflow-x: auto !important;
+  min-height: 8em !important;
+}
+*/
+.two-cols.horizontal-layout #horizontalOutputWrap {
+  flex: 0 0 auto;
+  margin-top: 12px;
+}
+
+.two-cols.horizontal-layout #outputhorizontal {
+  min-height: 160px;
+  max-height: none;
+}
+
+.two-cols.horizontal-layout .col-resizer {
+  display: none;
+}
+/* =========================================
+   RENDU MARKDOWN TYPE NOTEBOOK (JUPYTER)
+========================================= */
+
+.exercise-preview {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  line-height: 1.6;
+}
+
+/* Titres */
+.exercise-preview h1 {
+  font-size: 1.9em;
+  font-weight: 700;
+  margin: 0.6em 0 0.4em;
+}
+
+.exercise-preview h2 {
+  font-size: 1.5em;
+  font-weight: 700;
+  margin: 0.6em 0 0.4em;
+}
+
+.exercise-preview h3 {
+  font-size: 1.25em;
+  font-weight: 600;
+  margin: 0.5em 0 0.3em;
+}
+
+/* Paragraphes */
+.exercise-preview p {
+  margin: 0.4em 0 0.8em;
+}
+
+/* Listes */
+.exercise-preview ul,
+.exercise-preview ol {
+  margin: 0.4em 0 0.8em 1.4em;
+}
+
+.exercise-preview li {
+  margin: 0.2em 0;
+}
+
+/* Code inline */
+.exercise-preview code {
+  background: #eef1f5;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 0.95em;
+}
+
+/* Blocs de code */
+.exercise-preview pre {
+  background: #f6f8fa;
+  padding: 12px;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 10px 0;
+}
+
+.exercise-preview pre code {
+  background: none;
+  padding: 0;
+}
+
+/* Images */
+.exercise-preview img {
+  max-width: 100%;
+  height: auto;
+  margin: 8px 0;
+  border-radius: 6px;
+}
+
+/* Tableaux */
+.exercise-preview table {
+  border-collapse: collapse;
+  margin: 10px 0;
+  width: 100%;
+}
+
+.exercise-preview th,
+.exercise-preview td {
+  border: 1px solid #ccc;
+  padding: 6px 8px;
+  text-align: left;
+}
+
+.exercise-preview th {
+  background: #f0f0f0;
+}
+
+/* Blockquote */
+.exercise-preview blockquote {
+  border-left: 4px solid #ccc;
+  padding-left: 10px;
+  color: #555;
+  margin: 10px 0;
+}
+
+/* Séparateurs */
+.exercise-preview hr {
+  border: none;
+  border-top: 1px solid #ddd;
+  margin: 16px 0;
+}
+
+/* bouton css*/
+/* ===== panneau CSS global markdown ===== */
+.css-panel {
+  margin: -8px 0 10px 0;
+  padding: 10px 12px;
+  background: #f3f4f6;
+  border: 1px solid #d4d9df;
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  width: min(720px, 100%);
+  box-sizing: border-box;
+}
+
+.css-panel.hidden {
+  display: none;
+}
+
+.css-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.css-panel-help {
+  font-size: 12px;
+  line-height: 1.45;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.css-textarea {
+  width: 100%;
+  min-height: 140px;
+  resize: vertical;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #cfcfcf;
+  border-radius: 8px;
+  font-family: monospace;
+  font-size: 13px;
+  line-height: 1.45;
+  background: #fff;
+  color: #222;
+}
+
+.css-textarea:focus {
+  outline: none;
+  border-color: #6b8cff;
+  box-shadow: 0 0 0 3px rgba(107, 140, 255, 0.15);
+}
+/* bouton Nouveau fichier */
+.new-file-btn {
+  font-size: 22px;      /* taille de l’icône */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Agrandir les flèches gauche/droite */
+#pagesPrevButton,
+#pagesNextButton {
+  font-size: 20px;   /* taille de la flèche */
+  width: 36px;
+  height: 36px;
+}
+
+/* Réduire le bouton + */
+#pagesAddButton {
+  font-size: 14px;   /* plus petit */
+  width: 26px;
+  height: 26px;
+}
+/* augmenter taille fleche bouton dans la barre outils , mais c est supprimé... a effacer ?*/
+#layoutToggleButton {
+  font-size: 22px;
+}
+
+/* gestion des fleches suiv et prec*/
+.bottom-page-nav {
+  position: fixed;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX(-50%);
+  z-index: 10020;
+
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  padding: 5px 8px;
+  background: rgba(255, 255, 255, 0.97);
+  border: 1px solid #cfd6df;
+  border-radius: 9px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.16);
+}
+
+.bottom-page-nav.hidden {
+  display: none;
+}
+
+.bottom-page-nav-indicator {
+  min-width: 38px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 11px;
+  color: #222;
+}
+
+.bottom-page-nav .nav-item {
+  min-height: 27px;
+  padding: 0 10px;
+  font-size: 11px;
+}
+
+.bottom-page-nav .nav-item:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (max-width: 700px) {
+  .bottom-page-nav {
+    bottom: 6px;
+    gap: 6px;
+    padding: 5px 7px;
+  }
+
+  .bottom-page-nav .nav-item {
+    min-height: 24px;
+    padding: 0 7px;
+    font-size: 10px;
+  }
+
+  .bottom-page-nav-indicator {
+    min-width: 32px;
+    font-size: 10px;
+  }
+}
+
+/* ================================
+   CHAT DE GROUPE
+================================ */
+
+#groupChatZone {
+  margin: 6px 0 4px 0;
+}
+
+.group-chat-display {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 2.8em;
+  max-height: 260px;
+  padding: 6px 8px;
+  font-size: 13px;
+  font-family: Arial, sans-serif;
+  line-height: 1.45;
+  border: 1px solid #cfcfcf;
+  border-radius: 4px 4px 0 0;
+  background: #f9f9f9;
+  color: #222;
+  resize: vertical;
+}
+
+.group-chat-input-row {
+  display: flex;
+  flex-direction: row-reverse;
+  gap: 0;
+  height: 32px;
+}
+
+.group-chat-input {
+  flex: 1 1 auto;
+  height: 32px;
+  padding: 0 8px;
+  font-size: 13px;
+  border: 1px solid #cfcfcf;
+  border-top: none;
+  border-left: none;
+  border-radius: 0 0 4px 0;
+  outline: none;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+
+.group-chat-input:focus {
+  border-color: #6b8cff;
+  background: #fff;
+}
+.group-chat-send-btn {
+  position: relative;
+  height: 32px;
+  padding: 0 14px;
+  font-size: 13px;
+  background: #2f6feb;
+  color: #fff;
+  border: 1px solid #2f6feb;
+  border-top: none;
+  border-radius: 0 0 0 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  align-self: auto;
+  box-sizing: border-box;
+}
+
+
+.group-chat-send-btn:hover {
+  background: #1a56d6;
+}
+
+.group-chat-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
+/* affichage des exercices*/
+/* =========================
+   LISTE DES EXERCICES DANS LA MODALE
+========================= */
+
+.liste-exercices-modal {
+  list-style: none;
+  padding-left: 0 !important;
+  margin: 0;
+}
+
+.ligne-exercice-modal {
+  margin: 0;
+  padding: 2px 0;
+  border-bottom: 1px solid #e7ebf0;
+}
+
+ 
+
+
+
+.ligne-exercice-haut {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  line-height: 1.15;
+}
+
+
+  
+
+.titre-exercice-modal {
+  min-width: 0;
+  word-break: break-word;
+  font-weight: 600;
+  line-height: 1.15;
+  display: inline-block;
+  margin: 0;
+}
+
+
+
+ 
+ 
+
+  
+  
+
+.btn-lien-court-exercice {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  padding: 0;
+  border: 1px solid #bfc7d1;
+  border-radius: 6px;
+  background: #fff;
+  color: #222;
+  font-size: 12px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  align-self: center;
+  vertical-align: middle;
+  margin: 0;
+}
+.btn-lien-court-exercice {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  font-size: 13px;
+  border-radius: 6px;
+
+}
+
+.btn-lien-court-exercice:hover {
+  background: #f3f6fa;
+  border-color: #8fa7c0;
+}
+
+.btn-lien-court-exercice-disabled {
+  opacity: 0.45;
+  cursor: default;
+  pointer-events: none;
+}
+
+
+.btn-lien-court-exercice-restreint {
+  opacity: 0.55;
+  cursor: pointer;
+}
+.btn-lien-court-exercice-restreint:hover {
+  opacity: 1;
+}
+
+
+
+.titre-exercice-modal {
+  font-size: 0.95em;
+}
+
+.zone-lien-court-exercice {
+  margin: 4px 0 0 34px;
+}
+
+.lien-court-exercice-texte {
+  display: inline-block;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #f7f9fc;
+  border: 1px solid #d7dee7;
+  font-family: monospace;
+  font-size: 13px;
+  word-break: break-all;
+}
+.lien-court-exercice-texte {
+  padding: 6px 8px;
+  font-size: 12px;
+}
+.btn-lien-court-exercice {
+  position: relative;
+  top: -3px;
+}
+/* ===== Assistance cours — textarea historique ===== */
+.ia-historique {
+  width: 100%;
+  max-height: 400px;
+  min-height: 0;
+  overflow-y: auto;
+  font-size: 14px;
+  font-family: inherit;
+  padding: 0;
+  box-sizing: border-box;
+  background: #f9f9f9;
+  color: #222;
+  line-height: 1.5;
+  border-radius: 8px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  transition: padding 0.2s, border 0.2s;
+}
+
+/* Apparaît seulement quand il y a du contenu */
+.ia-historique:not(:empty) {
+  padding: 10px;
+  border: 1px solid #ccc;
+}
+
+/* ===== Input + bouton cours ===== */
+.ia-cours-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.ia-cours-row input {
+  flex: 1;
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #bbb;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.ia-cours-btn {
+  white-space: nowrap;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 14px;
+  background: #0a7a31;
+  color: #fff;
+}
+
+.ia-cours-btn:hover {
+  background: #075e25;
+}
+
+.ia-cours-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ===== Zone connexion clé (cachée par défaut) ===== */
+.ia-connect-zone {
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #f4f4f4;
+}
+
+.ia-connect-hint {
+  font-size: 13px;
+  color: #666;
+  margin: 0;
+}
+
+/* ===== Boutons alignés en bas ===== */
+.ia-tools-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* ===== Boutons grisés (sans clé API) ===== */
+.ia-tool-locked {
+  opacity: 0.45;
+  cursor: pointer;
+}
+
+/*css dans IA*/
+.ia-hist-question {
+  color: #555;
+  font-style: italic;
+  margin-bottom: 6px;
+}
+
+.ia-hist-reponse {
+  color: #222;
+}
+
+.ia-hist-reponse p { margin: 4px 0; }
+.ia-hist-reponse h1, 
+.ia-hist-reponse h2, 
+.ia-hist-reponse h3 { font-size: 15px; margin: 8px 0 4px; }
+.ia-hist-reponse code { 
+  background: #eee; 
+  padding: 1px 4px; 
+  border-radius: 3px; 
+  font-family: monospace; 
+}
+.ia-hist-reponse pre { 
+  background: #f4f4f4; 
+  padding: 8px; 
+  border-radius: 6px; 
+  overflow-x: auto; 
+}
+
+/* ===== Sélecteur d'application Dariush ===== */
+.dariush-app-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  cursor: pointer;
+  padding: 0 18px 0 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 2px center;
+  outline: none;
+}
+
+.dariush-app-select:focus {
+  outline: none;
+}
+
+.dariush-app-select:hover {
+  color: #2f6feb;
+}
+
+/* =========================================================
+   MODE SOMBRE GLOBAL (type Basthon)
+   Activé par la classe body.dariush-dark (posée par applyEditorTheme)
+   N'affecte rien en mode clair.
+   ========================================================= */
+body.dariush-dark {
+  --dk-bg-page:    #2b2b2b;  /* fond gris sombre autour (comme Basthon) */
+  --dk-bg-panel:   #272822;  /* fond markdown / output (= fond monokai) */
+  --dk-bg-soft:    #3a3a36;  /* fonds secondaires (code inline, th...) */
+  --dk-text:       #e0e0e0;  /* texte principal */
+  --dk-text-muted: #9aa0a6;  /* texte grisé */
+  --dk-border:     #444;     /* bordures */
+}
+
+/* Fond de page et conteneur */
+body.dariush-dark {
+  background-color: var(--dk-bg-page);
+}
+body.dariush-dark .container {
+  background-color: var(--dk-bg-page);
+}
+
+/* Zone markdown : textarea d'édition + aperçu rendu */
+body.dariush-dark .exercise-text,
+body.dariush-dark .exercise-preview {
+  background: var(--dk-bg-panel);
+  color: var(--dk-text);
+  border-color: var(--dk-border);
+}
+body.dariush-dark .exercise-text:focus,
+body.dariush-dark .exercise-preview:focus,
+body.dariush-dark .exercise-preview:hover {
+  background: var(--dk-bg-panel);
+  border-color: #6b8cff;
+}
+body.dariush-dark .exercise-preview.is-empty {
+  color: var(--dk-text-muted);
+}
+
+/* Titres / paragraphes / listes du markdown rendu */
+body.dariush-dark .exercise-preview h1,
+body.dariush-dark .exercise-preview h2,
+body.dariush-dark .exercise-preview h3,
+body.dariush-dark .exercise-preview h4,
+body.dariush-dark .exercise-preview p,
+body.dariush-dark .exercise-preview li {
+  color: var(--dk-text);
+}
+
+/* Code inline et blocs de code dans le markdown */
+body.dariush-dark .exercise-preview code {
+  background: var(--dk-bg-soft);
+  color: #f8f8f2;
+}
+body.dariush-dark .exercise-preview pre {
+  background: var(--dk-bg-soft);
+}
+body.dariush-dark .exercise-preview pre code {
+  background: none;
+}
+
+/* Tableaux du markdown */
+body.dariush-dark .exercise-preview th,
+body.dariush-dark .exercise-preview td {
+  border-color: var(--dk-border);
+}
+body.dariush-dark .exercise-preview th {
+  background: var(--dk-bg-soft);
+}
+
+/* Citations / séparateurs */
+body.dariush-dark .exercise-preview blockquote {
+  border-left-color: var(--dk-border);
+  color: var(--dk-text-muted);
+}
+body.dariush-dark .exercise-preview hr {
+  border-top-color: var(--dk-border);
+}
+
+/* Liens */
+body.dariush-dark .exercise-preview a {
+  color: #8ab4f8;
+}
+
+/* Zone de résultat (sortie Python, colonne droite) */
+body.dariush-dark .output {
+  background-color: var(--dk-bg-panel);
+  color: var(--dk-text);
+  border-color: var(--dk-border);
+}
+body.dariush-dark .loading {
+  color: var(--dk-text-muted);
+}
+
+/* Bordure de CodeMirror harmonisée */
+body.dariush-dark .CodeMirror {
+  border-color: var(--dk-border);
+}
+/* Mini-bandeau toggle au-dessus du markdown : se fond dans le markdown */
+body.dariush-dark .comment-toolbar {
+  background: var(--dk-bg-panel);
+  border-color: var(--dk-border);
+}
+body.dariush-dark .comment-toggle-btn {
+  background: var(--dk-bg-soft);
+  border-color: var(--dk-border);
+  color: var(--dk-text-muted);
+}
+body.dariush-dark .comment-toggle-btn:hover {
+  background: #4a4a44;
+}
+body.dariush-dark .comment-toggle-btn:active {
+  background: #555;
+}
+
+
+/* =========================================================
+   MARKDOWNS MULTIPLES — masquage de l'ancienne zone mono-bloc
+   Quand le système multi-blocs est actif, on cache l'ancienne
+   barre + zone markdown. Le !important bat le style inline
+   "display:inline" réappliqué par resetLoadedPageUi().
+   ========================================================= */
+/* Cache l'ancienne zone mono-bloc ET la barre qui la précède directement.
+   Le sélecteur ":has(+ #fenetrescommentaires)" cible la comment-toolbar
+   qui est juste avant l'ancienne zone, sans toucher aux barres des blocs. */
+body.markdowns-multiples-actifs #fenetrescommentaires,
+body.markdowns-multiples-actifs .comment-toolbar:has(+ #fenetrescommentaires) {
+  display: none !important;
+}
+
+/* Bouton de structure désactivé dans une barre de bloc markdown. */
+.md-block-toolbar .comment-toggle-btn.is-disabled,
+.md-block-toolbar .comment-toggle-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/*IA AIDE*/
+.aide-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  margin: 0 2px; padding: 2px 10px;
+  font-size: 0.9em; line-height: 1.3;
+  border: 1px solid #f0b429; border-radius: 14px;
+  background: #fff8e6; color: #8a5a00; cursor: pointer;
+}
+.aide-btn:hover { background: #ffeec2; }
+
+.rep-label {
+  display: inline-block; margin: 0 2px; padding: 1px 8px;
+  font-size: 0.85em; border-radius: 12px;
+  background: #eee; color: #999; cursor: default;
+}
+
+.ia-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.ia-provider-select {
+  padding: 6px 8px;
+  font-size: 13px;
+  border: 1px solid #bbb;
+  border-radius: 8px;
+  background: #fff;
+  max-width: 230px;
+}
+
+.ia-connect-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ia-cancel-btn {
+  border: 1px solid #bbb;
+  background: #fff;
+  color: #444;
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.ia-cancel-btn:hover { background: #f0f0f0; }
+
+
+.finrep-label {
+  display: inline-block;
+  margin: 0 2px;
+  font-size: 0.75em;
+  color: #c8c8c8;
+  cursor: default;
+  vertical-align: middle;
+}
+
+
+/* ===== Zone de génération de notebook (RAG) ===== */
+.rag-gen-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  margin-top: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.03);
+}
+.rag-gen-title { font-weight: bold; }
+.rag-gen-label { font-size: 0.9em; margin-bottom: 6px; }
+.rag-themes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 4px 10px;
+}
+.rag-themes-grid label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.88em;
+  cursor: pointer;
+}
+.rag-gen-row { display: flex; flex-wrap: wrap; gap: 18px; }
+.rag-gen-field { display: flex; align-items: center; gap: 6px; font-size: 0.9em; }
+.rag-slider-row { display: flex; align-items: center; gap: 10px; }
+.rag-slider-row input[type="range"] { flex: 1; }
+.rag-gen-actions { display: flex; gap: 10px; }
+
+
+
+/* ===== PANEL AIDE — disposition par thèmes (compact) ===== */
+#panel-aide.aide-panel-themes {
+  display: block;
+}
+
+#panel-aide .aide-top-row {
+  display: flex;
+  justify-content: flex-start;
+  padding-bottom: 6px;
+  border-bottom: 0.5px solid #ddd;
+  margin-bottom: 8px;
+}
+
+#panel-aide .aide-theme {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 4px;
+}
+
+#panel-aide .aide-theme:first-of-type {
+  margin-top: 0;
+}
+
+#panel-aide .aide-theme::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+#panel-aide .aide-theme-label {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+#panel-aide .aide-theme-codage::before    { background: #2f6feb; }
+#panel-aide .aide-theme-codage .aide-theme-label    { color: #2f6feb; }
+
+#panel-aide .aide-theme-exercices::before { background: #0a7; }
+#panel-aide .aide-theme-exercices .aide-theme-label { color: #0a7; }
+
+#panel-aide .aide-theme-partage::before   { background: #d98a00; }
+#panel-aide .aide-theme-partage .aide-theme-label   { color: #d98a00; }
+
+#panel-aide .aide-theme-ia::before        { background: #8a5acb; }
+#panel-aide .aide-theme-ia .aide-theme-label        { color: #8a5acb; }
+
+
+
+#panel-aide .aide-theme-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px 10px;
+}
+
+#panel-aide .aide-theme-grid .nav-btn {
+  width: 100%;
+  text-align: left;
+  box-sizing: border-box;
+  padding: 5px 10px;
+  font-size: 14px;
+}
+
+#panel-aide .aide-top-row .nav-btn {
+  font-size: 14px;
+  padding: 5px 10px;
+}
+@media (max-width: 700px) {
+  #panel-aide .aide-theme-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 460px) {
+  #panel-aide .aide-theme-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== Panneau Dariush-Code-Graphe / Dariush-Graphe (iframe, déplaçable) ===== */
+.graph-modal-overlay{
+  position:fixed; inset:0; z-index:10000;
+  background:rgba(0,0,0,.45);
+  display:none;
+}
+.graph-modal-overlay.open{ display:block; }
+.graph-modal-window{
+  position:fixed; left:50%; top:4vh; transform:translateX(-50%);
+  width:min(1100px,95vw); height:min(820px,92vh);
+  background:#fff; border-radius:12px; overflow:hidden;
+  box-shadow:0 20px 60px rgba(0,0,0,.3);
+  display:flex; flex-direction:column;
+}
+.graph-modal-bar{
+  flex:0 0 auto; display:flex; align-items:center; gap:12px;
+  padding:6px 10px; background:#e5e7eb; border-bottom:1px solid #c7ccd1;
+  cursor:move; user-select:none;
+}
+.graph-modal-title{ font-weight:600; color:#1f2937; white-space:nowrap; }
+.graph-modal-info{ flex:1 1 auto; font-size:12px; color:#5b6678; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.graph-modal-info b{ color:#1f2937; }
+.graph-switch-btn{
+  border:1px solid #c7ccd1; background:#fff; color:#1f2937;
+  border-radius:8px; padding:6px 10px; font-size:13px; cursor:pointer; white-space:nowrap;
+}
+.graph-switch-btn:hover{ border-color:#3b54d6; color:#3b54d6; }
+.graph-switch-btn[hidden]{ display:none; }
+.graph-modal-close{
+  border:none; background:#d6dae0; color:#1f2937;
+  width:30px; height:30px; border-radius:8px; font-size:17px; line-height:1; cursor:pointer;
+}
+.graph-modal-close:hover{ background:#c7ccd1; }
+.graph-modal-window iframe{ flex:1; width:100%; height:100%; border:0; display:block; }
+
+/* =========================
+   MENUS DEROULANTS PAR NIVEAU
+   Regles communes a la fenetre de recherche (#resultatsExercices) et aux
+   arbres de choix des panneaux Supprimer / Modifier / Corriger. Le prefixe
+   .arbre-niveaux-exercices compte deux classes : il passe donc devant le
+   "margin-top" generique de .proposer-form button (une classe + un element).
+========================= */
+
+.arbre-niveaux-exercices .resume-exercices {
+  margin-bottom: 10px;
+  font-size: 13px;
+  color: #5b6678;
+}
+
+.arbre-niveaux-exercices .niveau-bloc {
+  border-bottom: 1px solid #e7ebf0;
+}
+
+/* Un sous-menu ne redessine pas la bordure de son parent. */
+.arbre-niveaux-exercices .niveau-bloc .niveau-bloc:last-child {
+  border-bottom: none;
+}
+
+.arbre-niveaux-exercices .niveau-menu {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  padding: 8px 6px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  color: #222;
+  text-align: left;
+  cursor: pointer;
+  align-self: auto;
+}
+
+.arbre-niveaux-exercices .niveau-menu:hover {
+  background: #eef3fa;
+}
+
+.arbre-niveaux-exercices .niveau-menu .niveau-fleche {
+  width: 14px;
+  min-width: 14px;
+  font-size: 12px;
+  color: #4a5768;
+}
+
+.arbre-niveaux-exercices .niveau-menu .niveau-libelle {
+  flex: 1;
+  min-width: 0;
+}
+
+.arbre-niveaux-exercices .niveau-menu .niveau-compteur {
+  font-size: 13px;
+  font-weight: 500;
+  color: #5b6678;
+}
+
+/* Menu sans aucun exercice : visible mais en retrait. */
+.arbre-niveaux-exercices .niveau-menu.est-vide {
+  opacity: 0.5;
+}
+
+.arbre-niveaux-exercices .niveau-menu.niveau-sous-menu-titre {
+  font-size: 14px;
+  font-weight: 500;
+  color: #3a4657;
+}
+
+/* Contenu deplie : sous-menus ou liste d'exercices, decale sous son titre. */
+.arbre-niveaux-exercices .niveau-contenu {
+  padding-left: 22px;
+}
+
+.arbre-niveaux-exercices .niveau-vide {
+  margin: 4px 0 8px;
+  font-size: 13px;
+  color: #8a94a3;
+}
+
+.arbre-niveaux-exercices .niveau-pagination-info {
+  margin: 2px 0 6px;
+  font-size: 12px;
+  color: #5b6678;
+}
+
+.arbre-niveaux-exercices .pagination-exercices {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 10px 0 12px;
+}
+
+.arbre-niveaux-exercices .pagination-exercices .btn-page-exercice {
+  margin: 0;
+  align-self: center;
+}
+
+
+/* =========================
+   CHAMP CONTRIBUTEUR (fenetre de recherche d'exercices)
+   Le select des contributeurs flotte sous l'input et n'apparait qu'au
+   focus, pour que le champ tienne sur une ligne comme "Descriptif".
+========================= */
+
+#panel-exercices .champ-contributeur {
+  position: relative;
+}
+
+#panel-exercices .select-contributeur {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(20, 27, 38, 0.18);
+}
+
+#panel-exercices .champ-contributeur.est-ouvert .select-contributeur {
+  display: block;
+}
+
+
+/* =========================
+   ARBRE DE CHOIX D'UN EXERCICE
+   Panneaux Supprimer / Modifier / Corriger : remplace le <select> a plat,
+   qui reste dans le DOM mais masque et porte toujours la valeur choisie.
+========================= */
+
+.arbre-choix-exercice {
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid #d7dee7;
+  border-radius: 8px;
+  background: #fff;
+  padding: 4px 6px;
+}
+
+.arbre-choix-exercice .liste-choix-exercices {
+  list-style: none;
+  margin: 2px 0 6px;
+  padding-left: 0 !important;
+}
+
+.arbre-choix-exercice .liste-choix-exercices li {
+  margin: 0;
+}
+
+.arbre-choix-exercice .choix-exercice {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 5px 8px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: #222;
+  text-align: left;
+  cursor: pointer;
+  align-self: auto;
+  word-break: break-word;
+}
+
+.arbre-choix-exercice .choix-exercice:hover {
+  background: #eef3fa;
+}
+
+.arbre-choix-exercice .choix-exercice.est-choisi {
+  background: #2f6feb;
+  color: #fff;
+  font-weight: 600;
+}

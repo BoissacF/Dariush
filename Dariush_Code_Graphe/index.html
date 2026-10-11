@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dariush-Code-Graphe</title>
+<script>try{if(window.self!==window.top)document.documentElement.classList.add("embedded");}catch(e){document.documentElement.classList.add("embedded");}</script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Bandeau gris, identique à Dariush -->
+  <div class="top-bar">
+    <div class="top-bar-left">Dariush-Code-Graphe</div>
+  </div>
+
+  <p class="intro">
+    Génère, à partir d'un même graphe, du code Mermaid à coller dans un markdown (avec couleurs et formes) et du code Python NetworkX à exécuter (structure seule, sans couleurs ni formes).
+  </p>
+
+  <div class="wrap">
+    <!-- ================= ÉDITEUR ================= -->
+    <section class="col editor">
+      <div class="toolbar">
+        <button class="primary" id="addNode">+ Ajouter un sommet</button>
+        <label class="field">
+          Type de graphe
+          <select id="graphMode">
+            <option value="undirected">Non orienté</option>
+            <option value="directed">Orienté</option>
+          </select>
+        </label>
+        <label class="field" style="margin-left:auto">
+          Sens du tracé
+          <select id="direction">
+            <option value="TD">Haut → bas</option>
+            <option value="LR">Gauche → droite</option>
+            <option value="BT">Bas → haut</option>
+            <option value="RL">Droite → gauche</option>
+          </select>
+        </label>
+      </div>
+
+      <div id="listView">
+        <div class="nodes-list" id="nodesList"></div>
+        <p class="empty-hint" id="emptyHint">
+          Aucun sommet pour l'instant. Clique sur « + Ajouter un sommet » :
+          chaque sommet apparaît ici. Clique sur son étiquette pour le configurer
+          et lui ajouter des arêtes.
+        </p>
+      </div>
+
+      <div id="detailView" style="display:none"></div>
+    </section>
+
+    <!-- ================= SORTIE ================= -->
+    <section class="col output">
+      <div class="preview-card">
+        <div class="card-head"><h2>Aperçu</h2></div>
+        <div id="preview"><div class="preview-msg">Ajoute un sommet pour voir le graphe.</div></div>
+      </div>
+      <div class="code-card">
+        <div class="card-head">
+          <h2>Code Mermaid (markdown)</h2>
+          <span><button class="ghost" id="copyBtn">Copier</button><span class="copied" id="copied" hidden>Copié</span></span>
+        </div>
+        <textarea id="code" readonly spellcheck="false"></textarea>
+      </div>
+      <div class="code-card">
+        <div class="card-head">
+          <h2>Code Python (NetworkX)</h2>
+          <span><button class="ghost" id="copyPyBtn">Copier</button><span class="copied" id="copiedPy" hidden>Copié</span></span>
+        </div>
+        <p class="code-note">Le code Python ne prend pas en charge les formes ni les couleurs (réservées au Mermaid) : tous les sommets sont identiques.</p>
+        <textarea id="codePy" readonly spellcheck="false"></textarea>
+      </div>
+    </section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

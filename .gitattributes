@@ -1,0 +1,4 @@
+# Aucune conversion de fins de ligne : git stocke les fichiers tels quels.
+# Evite que git reecrive les fichiers en CRLF alors qu'ils partent sur un
+# VPS Linux, et evite les faux "fichier modifie" sur des lignes non touchees.
+* -text
