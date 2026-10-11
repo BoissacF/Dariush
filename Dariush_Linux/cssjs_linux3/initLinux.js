@@ -293,7 +293,7 @@ initLinux.js — Dariush Linux
       }
     }
 
-    // Compteur d'élèves connectés (panneau "À propos")
+    // Compteur d'élèves connectés (panneau "Code/Licence")
     if (window._dariushSocket) {
       const sock = window._dariushSocket;
 
@@ -307,7 +307,7 @@ initLinux.js — Dariush Linux
         if (elRecord) elRecord.textContent = (data && typeof data.record === "number") ? data.record : "?";
       });
 
-      // Quand on ouvre le panneau "À propos", redemander le compteur
+      // Quand on ouvre le panneau "Code/Licence", redemander le compteur
       const btnApropos = document.querySelector('button[onclick*="panel-apropos"]');
       if (btnApropos) {
         btnApropos.addEventListener("click", () => {

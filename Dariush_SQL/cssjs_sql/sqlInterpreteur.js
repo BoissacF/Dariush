@@ -1,7 +1,7 @@
 /***************************************************************
 DARIUSH SQL — sqlInterpreteur.js
 auteur : Frédéric Boissac
-licence : gratos pour un usage non commercial
+licence : GNU AGPL version 3 (voir le fichier LICENSE)
 
 Équivalent SQL de interpreteur.js (Python).
 Moteur SQL : sql.js (SQLite WASM, in-browser).

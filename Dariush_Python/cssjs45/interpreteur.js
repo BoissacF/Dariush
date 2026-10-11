@@ -2,7 +2,7 @@
 /***************************************************************
 DARIUSH PYTHON — 8/02/2026
 auteur : Frédéric Boissac
-licence : gratos pour un usage non commercial
+licence : GNU AGPL version 3 (voir le fichier LICENSE)
 ***************************************************************/
 
 

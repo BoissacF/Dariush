@@ -1409,11 +1409,11 @@ function lockStudentButtons() {
     btn.title = MSG;
   }
 
-  // Bloquer boutons Enseignant / Aide / A propos dans la top-bar
+  // Bloquer boutons Enseignant / Aide / Code/Licence dans la top-bar
   const topBarBtns = document.querySelectorAll("#topBarMenu .nav-item");
   for (const btn of topBarBtns) {
     const txt = (btn.textContent || "").trim();
-    if (!["Enseignant", "Aide", "A propos"].includes(txt)) continue;
+    if (!["Enseignant", "Aide", "Code/Licence"].includes(txt)) continue;
     if (btn.__studentOverlay) continue;
 
     const overlay = document.createElement("div");

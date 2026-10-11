@@ -12,8 +12,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/theme/monokai.min.css">
 
   <!-- CSS principal (commun) -->
-  <link rel="stylesheet" type="text/css" href="../Dariush_Commun/version3/style.css?v=624504">
-  <link rel="stylesheet" type="text/css" href="cssjs_sql/style_sql.css?v=624504">
+  <link rel="stylesheet" type="text/css" href="../Dariush_Commun/version3/style.css?v=624505">
+  <link rel="stylesheet" type="text/css" href="cssjs_sql/style_sql.css?v=624505">
 
   <!-- pako -->
   <script defer src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
@@ -34,8 +34,8 @@
        CONNEXION GROUPE ET AIDE — COMMUN
        WebSocket (nécessite le serveur Node, Dariush-node/server.js)
   ══════════════════════════════════════ -->
-  <script type="module" src="../Dariush_Commun/version3/SOCKET_connexion.js?v=624504"></script>
-  <script defer src="../Dariush_Commun/version3/SOCKET_connexion_aide.js?v=624504"></script>
+  <script type="module" src="../Dariush_Commun/version3/SOCKET_connexion.js?v=624505"></script>
+  <script defer src="../Dariush_Commun/version3/SOCKET_connexion_aide.js?v=624505"></script>
 
   <!-- SCRIPTS COMMUNS -->
    <script>
@@ -47,27 +47,27 @@
   });
 </script>
 
-  <script defer src="../Dariush_Commun/version3/importer_pdf.js?v=624504"></script>
-  <script defer src="../Dariush_Commun/version3/aide_toggle.js?v=624504"></script>
-  <script defer src="../Dariush_Commun/version3/gestionMenu.js?v=624504"></script>
-  <script defer src="../Dariush_Commun/version3/plein_ecran.js?v=624504"></script>
-  <script defer src="../Dariush_Commun/version3/raccourci_executer.js?v=624504"></script>
-  <script defer src="../Dariush_Commun/version3/sauvegarde.js?v=624504"></script>
-  <script defer src="../Dariush_Commun/version3/importer.js?v=624504"></script>
-  <script defer src="../Dariush_Commun/version3/pagesmultiples.js?v=624504"></script>
-  <script defer src="../Dariush_Commun/version3/scrollFlipPage.js?v=624504"></script>
-  <script defer src="../Dariush_Commun/version3/pageScrollbar.js?v=624504"></script>
-  <script defer src="../Dariush_Commun/fichiersannexes/markdown-it.min.js?v=624504"></script>
-  <script defer src="../Dariush_Commun/version3/markdown.js?v=624504"></script>
-  <script defer src="../Dariush_Commun/version3/googleDrive.js?v=624504"></script>
-  <script defer src="../Dariush_Commun/version3/outils.js?v=624504"></script>
-  <script defer src="../Dariush_Commun/version3/IA.js?v=624504"></script>
-  <script defer src="../Dariush_Commun/version3/agent_aide.js?v=624504"></script>
-  <script defer src="../Dariush_Commun/version3/gestionimages.js?v=624504"></script>
+  <script defer src="../Dariush_Commun/version3/importer_pdf.js?v=624505"></script>
+  <script defer src="../Dariush_Commun/version3/aide_toggle.js?v=624505"></script>
+  <script defer src="../Dariush_Commun/version3/gestionMenu.js?v=624505"></script>
+  <script defer src="../Dariush_Commun/version3/plein_ecran.js?v=624505"></script>
+  <script defer src="../Dariush_Commun/version3/raccourci_executer.js?v=624505"></script>
+  <script defer src="../Dariush_Commun/version3/sauvegarde.js?v=624505"></script>
+  <script defer src="../Dariush_Commun/version3/importer.js?v=624505"></script>
+  <script defer src="../Dariush_Commun/version3/pagesmultiples.js?v=624505"></script>
+  <script defer src="../Dariush_Commun/version3/scrollFlipPage.js?v=624505"></script>
+  <script defer src="../Dariush_Commun/version3/pageScrollbar.js?v=624505"></script>
+  <script defer src="../Dariush_Commun/fichiersannexes/markdown-it.min.js?v=624505"></script>
+  <script defer src="../Dariush_Commun/version3/markdown.js?v=624505"></script>
+  <script defer src="../Dariush_Commun/version3/googleDrive.js?v=624505"></script>
+  <script defer src="../Dariush_Commun/version3/outils.js?v=624505"></script>
+  <script defer src="../Dariush_Commun/version3/IA.js?v=624505"></script>
+  <script defer src="../Dariush_Commun/version3/agent_aide.js?v=624505"></script>
+  <script defer src="../Dariush_Commun/version3/gestionimages.js?v=624505"></script>
   <script defer src="../Dariush_Commun/version3/graphPanel.js?v=8860"></script>
 
   <!-- SCRIPTS SPÉCIFIQUES SQL -->
-  <script defer src="cssjs_sql/sqlInterpreteur.js?v=624504"></script>
+  <script defer src="cssjs_sql/sqlInterpreteur.js?v=624505"></script>
 
 </head>
 
@@ -108,7 +108,7 @@
           Aide
         </button>
         <button class="nav-item nav-btn" type="button" onclick="showMenuPanel('panel-apropos')">
-          A propos
+          Code/Licence
         </button>
         <a class="nav-item nav-home" href="https://physalgo.fr/Dariush/index.html">Home</a>
       </div>
@@ -207,12 +207,13 @@
 
 
 
-          <!-- Panel à propos -->
-          <div id="panel-apropos" class="menu-panel" data-title="À propos" style="display:none;">
+          <!-- Panel code / licence -->
+          <div id="panel-apropos" class="menu-panel" data-title="Code/Licence" style="display:none;">
             <ul style="list-style:none; padding-left:0; margin-top:10px;">
               <li><span class="text-muted">JavaScript Application 2026</span></li>
               <li><span class="text-muted" id="t7">Auteur : Frédéric Boissac</span></li>
-              <li><span class="text-muted" id="t8">Toutes les licences sont libres pour un usage non commercial</span></li>
+              <li><span class="text-muted" id="t8">Logiciel libre sous licence GNU AGPL version 3 (<a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener">lire la licence</a>)</span></li>
+              <li style="margin-top:8px;"><a href="https://github.com/BoissacF/Dariush" target="_blank" rel="noopener">Accéder au code</a></li>
             </ul>
           </div>
 
