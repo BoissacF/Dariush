@@ -3365,3 +3365,41 @@ body.markdowns-multiples-actifs .comment-toolbar:has(+ #fenetrescommentaires) {
   color: #fff;
   font-weight: 600;
 }
+
+/* =========================================
+   SCROLL CONTINU (ruban de pages, scrollContinu.js)
+   Fac-similés des pages non actives autour de la zone vive.
+   Le rendu interne réutilise les classes existantes (md-block,
+   exercise-preview, two-cols, output) pour une fidélité maximale :
+   ici on ne règle que la séparation visuelle entre pages.
+========================================= */
+
+/* Séparateur de pages : fine ligne en pointillés, façon saut de page. */
+#scPagesAvant .sc-page {
+  border-bottom: 2px dashed #c9d2dc;
+  margin-bottom: 14px;
+  padding-bottom: 16px;
+}
+
+#scPagesApres .sc-page {
+  border-top: 2px dashed #c9d2dc;
+  margin-top: 14px;
+  padding-top: 16px;
+}
+
+/* Les boutons inertes des barres de blocs ne doivent pas capter la souris. */
+.sc-page .md-block-toolbar {
+  pointer-events: none;
+}
+
+/* Secours sans CodeMirror : code brut avec le même cadre que l'éditeur. */
+.sc-page .sc-code-brut {
+  font-family: monospace;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  min-height: 6em;
+  margin: 0;
+  padding: 4px;
+  white-space: pre;
+  overflow-x: auto;
+}

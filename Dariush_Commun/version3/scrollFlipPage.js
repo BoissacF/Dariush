@@ -138,6 +138,13 @@
   }
 
   function init() {
+    // Mode ruban (scrollContinu.js) : le défilement continu remplace la
+    // bascule en butée. Ce module ne s'installe pas (Dariush Linux, qui ne
+    // pose pas le drapeau, garde le comportement actuel).
+    if (window.SCROLL_CONTINU_ACTIF === true) {
+      log("SCROLL_CONTINU_ACTIF : scrollFlipPage désactivé");
+      return;
+    }
     window.addEventListener("wheel", onWheel, { capture: true, passive: true });
     log("initialisé (v5).",
         " PagesMultiples présent ?", !!window.PagesMultiples,

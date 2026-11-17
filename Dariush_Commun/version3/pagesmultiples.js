@@ -260,10 +260,14 @@ function loadPageIntoEditor(index, options = {}) {
   }
 
   requestAnimationFrame(() => {
-    editor.focus();
+    // Mode ruban (scrollContinu.js) : le scroll et le focus sont pilotés par
+    // le ruban, on ne les force pas ici (sinon l'écran sauterait en haut).
+    const rubanActif = window.SCROLL_CONTINU_ACTIF === true;
+
+    if (!rubanActif) editor.focus();
     editor.refresh();
 
-    if (!keepScroll) {
+    if (!keepScroll && !rubanActif) {
       scrollEditorToTopLine(editor, 1);
       setTimeout(() => {
         const zonePython = document.getElementById("zonePython");
@@ -696,6 +700,23 @@ function getAllPages() {
     return pagesState.activeIndex;
   }
 
+  // ─── Accès en lecture pour le ruban de pages (scrollContinu.js) ────────────
+  // getPageRef : référence DIRECTE de l'objet page (pas une copie), pour lire
+  // code/markdowns/images d'une page non active sans dupliquer les images.
+  // getPageOutputText : dernière sortie TEXTE mémorisée pour cette page
+  // (même source que la restauration faite par loadPageIntoEditor).
+  function getPageRef(index) {
+    const i = parseInt(index, 10);
+    if (!Number.isFinite(i)) return null;
+    return pagesState.pages[i] || null;
+  }
+
+  function getPageOutputText(index) {
+    const page = getPageRef(index);
+    if (!page) return "";
+    return pageOutputs.get(page) || "";
+  }
+
  // ─── Registre "contextes expirés" (mémoire de session uniquement) ──────────
   // Quand le rejeu des pages précédentes a dépassé 5 s (page lente / boucle
   // infinie), on mémorise le hash du code de ces pages. Tant qu'aucune page
@@ -741,6 +762,8 @@ function getAllPages() {
     moveMarkdownDown,
     refreshMarkdownBlocksUi,
     getCurrentPageRef: () => getCurrentPage(),
+    getPageRef,
+    getPageOutputText,
     getPagesCount: () => pagesState.pages.length,
     hashContext,
     markContextExpired,
