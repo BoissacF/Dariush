@@ -3367,33 +3367,53 @@ body.markdowns-multiples-actifs .comment-toolbar:has(+ #fenetrescommentaires) {
 }
 
 /* =========================================
-   SCROLL CONTINU (ruban de pages, scrollContinu.js)
-   Fac-similés des pages non actives autour de la zone vive.
-   Le rendu interne réutilise les classes existantes (md-block,
-   exercise-preview, two-cols, output) pour une fidélité maximale :
-   ici on ne règle que la séparation visuelle entre pages.
+   NOTEBOOK CONTINU (scrollContinu.js)
+   Tout le document dans #scRuban : une section par page, posées une fois
+   pour toutes. Le rendu interne réutilise les classes existantes (md-block,
+   exercise-preview, two-cols, output) pour une fidélité maximale.
+   Objectif : un texte continu, pas des pages — aucune marge entre sections,
+   juste un fin trait discret pour repérer les débuts de page.
 ========================================= */
 
-/* Séparateur de pages : fine ligne en pointillés, façon saut de page. */
-#scPagesAvant .sc-page {
-  border-bottom: 2px dashed #c9d2dc;
-  margin-bottom: 14px;
-  padding-bottom: 16px;
+#scRuban {
+  flex: 0 0 auto;   /* ne pas s'étirer dans la colonne flex de #zonePython */
+  min-height: 0;
 }
 
-#scPagesApres .sc-page {
-  border-top: 2px dashed #c9d2dc;
-  margin-top: 14px;
-  padding-top: 16px;
+.sc-section {
+  display: block;
 }
 
-/* Les boutons inertes des barres de blocs ne doivent pas capter la souris. */
-.sc-page .md-block-toolbar {
+/* Début de page : trait fin très discret, sans marge (flux continu). */
+.sc-section + .sc-section {
+  border-top: 1px solid #e3e8ee;
+}
+
+/* Dans une section vive, mainSplit ne doit pas s'étirer : hauteur = contenu. */
+.sc-section .two-cols {
+  flex: 0 0 auto;
+}
+
+/* Les boutons inertes des barres de blocs des fac-similés ne captent pas
+   la souris (le clic active la page). Ne s'applique PAS à la section vive. */
+.sc-fac .md-block-toolbar {
   pointer-events: none;
 }
 
+/* Sortie horizontale d'un fac-similé : mêmes dimensions que
+   #horizontalOutputWrap / #outputhorizontal en mode horizontal. */
+.sc-fac .sc-horiz-wrap {
+  flex: 0 0 auto;
+  margin-top: 12px;
+}
+
+.sc-fac .sc-output-h {
+  min-height: 160px;
+  max-height: none;
+}
+
 /* Secours sans CodeMirror : code brut avec le même cadre que l'éditeur. */
-.sc-page .sc-code-brut {
+.sc-fac .sc-code-brut {
   font-family: monospace;
   border: 1px solid #ddd;
   border-radius: 4px;
