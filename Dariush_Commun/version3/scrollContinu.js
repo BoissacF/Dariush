@@ -745,6 +745,32 @@
     if (zonePython) scrollReference = zonePython.scrollTop;
   }
 
+  // Ancrage du défilement de Chrome (overflow-anchor) : quand du contenu
+  // change de place au-dessus de la vue, Chrome décale le défilement pour
+  // suivre un élément de référence qu'il a choisi. Pendant un échange de
+  // page, la zone vive reçoit le contenu de la nouvelle page AVANT d'être
+  // déplacée : si Chrome a choisi une ligne de code ou la sortie vive comme
+  // référence, il la suit (ex. +465 px quand la nouvelle page commence par
+  // une grande image). On le suspend le temps de l'échange — ce module
+  // compense déjà lui-même au pixel près — puis on le rétablit (il reste
+  // utile pour les images ou diagrammes qui finissent de se charger).
+  let ancrageSuspendu = 0;
+  function suspendreAncrageNavigateur() {
+    if (!zonePython) return;
+    ancrageSuspendu++;
+    zonePython.style.overflowAnchor = "none";
+  }
+
+  function retablirAncrageNavigateur() {
+    if (!zonePython) return;
+    // Deux images plus tard : Chrome choisit alors une nouvelle référence
+    // sans appliquer de correction pour l'échange déjà fait.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      ancrageSuspendu = Math.max(0, ancrageSuspendu - 1);
+      if (ancrageSuspendu === 0) zonePython.style.overflowAnchor = "";
+    }));
+  }
+
   // ── Indicateur "n/N" en bas pendant le défilement ────────────────────────
   function majIndicateurDefilement(indice) {
     const gestionnaire = pm();
@@ -769,8 +795,10 @@
     enActivation = true;
     if (settleTimer) { clearTimeout(settleTimer); settleTimer = null; }
 
+    suspendreAncrageNavigateur();
     const secJ = sections[j].el;
     const avant = secJ.offsetTop;
+    const scrollAvant = zonePython.scrollTop;
     const ancienne = sections[indiceLive];
     const clone = clonerMarkdownsVifs(ancienne ? ancienne.pageRef : null);
 
@@ -782,8 +810,13 @@
     deplacerLiveVers(j, clone);
     edit.refresh();
 
+    // Position visée : celle d'avant l'échange, corrigée du seul écart de
+    // mise en page de la section. Si quoi que ce soit a fait défiler pendant
+    // l'échange (ancrage navigateur malgré la suspension, focus...), c'est
+    // annulé ici ; sinon aucune écriture (pas d'animation interrompue).
     const delta = secJ.offsetTop - avant;
-    if (Math.abs(delta) >= 1) poserScroll(zonePython.scrollTop + delta);
+    const vise = scrollAvant + delta;
+    if (Math.abs(zonePython.scrollTop - vise) >= 1) poserScroll(vise);
     let reference = secJ.offsetTop;
 
     requestAnimationFrame(() => {
@@ -802,6 +835,7 @@
       majIndicateurDefilement(indiceLive);
       enActivation = false;
     });
+    retablirAncrageNavigateur();
   }
 
   // ── Défilement : indicateur en direct + bascule à l'arrêt ────────────────
