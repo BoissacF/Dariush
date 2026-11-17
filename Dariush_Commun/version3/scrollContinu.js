@@ -5,26 +5,34 @@
 
   Le ruban #scRuban (dans #zonePython) contient UNE section par page, dans
   l'ordre, posées une fois pour toutes : au défilement on voit un texte
-  continu, pas des pages qui se reconstruisent. Chaque section affiche le
-  markdown rendu, le code colorié (CodeMirror en lecture seule) et la
-  dernière sortie : du texte, pas du code actif.
+  continu. Chaque section inactive affiche le markdown rendu, le code
+  colorié (CodeMirror en lecture seule) et la dernière sortie : du texte,
+  pas du code actif.
 
-  La zone de travail réelle (markdownsContainer + mainSplit : éditeur,
-  sortie, exécution) reste UNIQUE : elle est simplement transplantée DANS la
-  section de la page active. À la bascule, seules deux sections changent de
-  contenu, SUR PLACE : l'ancienne page active redevient un fac-similé de
-  même hauteur, la nouvelle reçoit la zone vive. Rien d'autre ne bouge, et
-  l'écart résiduel de hauteur est compensé au pixel : pas de saut.
+  La zone de travail réelle (markdownsContainer + mainSplit) reste UNIQUE :
+  elle est transplantée DANS la section de la page active. À la bascule,
+  seules deux sections changent de contenu, SUR PLACE, à hauteur identique :
+  - le markdown de la page quittée est un CLONE exact du rendu vif (images
+    déjà décodées, Mermaid déjà dessiné) ;
+  - son code/sortie est réutilisé tel quel s'il n'a pas changé (cache).
 
-  - Page active = celle qui contient le milieu de l'écran (ligne médiane).
-    Le numéro en bas suit pendant le défilement ; la bascule réelle se fait
-    à l'arrêt du défilement (~160 ms), avec hystérésis : après une bascule il
-    faut un vrai déplacement (> 48 px) avant d'en évaluer une autre — pas
-    d'aller-retour 4/5/4/5.
-  - Clic dans une section inactive : active sa page (curseur posé au clic).
+  Règles de fluidité (toutes vérifiées au test molette réel) :
+  - Aucune correction de scroll différée : on ne compense QUE les
+    variations de mise en page (positions relatives au document), jamais
+    le défilement fait par l'élève entre-temps.
+  - Le défilement n'est jamais bloqué : l'écouteur de molette non passif
+    (nécessaire au Ctrl+molette) n'est posé que pendant l'appui sur Ctrl.
+  - Les observateurs (zoom, thème, disposition) ne réagissent qu'à un
+    vrai changement de valeur, pas aux focus/blur ni aux frappes.
+
+  - Page active = celle qui contient le milieu de l'écran. Le numéro en bas
+    suit pendant le défilement ; la bascule réelle se fait à l'arrêt du
+    défilement, ou immédiatement au premier clic / touche (le bouton
+    Exécuter exécute donc toujours la page affichée en bas).
+  - Clic dans une section inactive : active sa page (curseur posé au clic
+    si c'est dans le code).
   - Zoom (Ctrl+molette, panneau zoom) : répercuté sur toutes les sections.
-  - Navigation verrouillée (groupe / aide) : les sections inactives sont
-    masquées, on retrouve le comportement une-page actuel.
+  - Navigation verrouillée (groupe / aide) : sections inactives masquées.
 
   Module autonome : ne fait RIEN si window.SCROLL_CONTINU_ACTIF !== true
   (Dariush Linux ne pose pas ce drapeau et garde scrollFlipPage).
@@ -39,23 +47,29 @@
   const DEBUG = false;
 
   // ── Réglages ─────────────────────────────────────────────────────────────
-  const SETTLE_MS = 160;            // immobilité du scroll avant bascule réelle
+  const SETTLE_MS = 200;            // immobilité du scroll avant bascule réelle
   const SEUIL_HYSTERESIS_PX = 48;   // déplacement mini avant nouvelle évaluation
-  const REBUILD_DEBOUNCE_MS = 100;  // regroupement des changements externes
+  const IGNORE_REFLOW_MS = 450;     // après un zoom / changement de disposition
 
   // ── État ─────────────────────────────────────────────────────────────────
   let zonePython = null;
   let rubanEl = null;           // #scRuban
-  let sections = [];            // [{el, cm}] ; cm = CodeMirror du fac-similé, null si vive
-  let indiceLive = 0;           // index de la section qui contient la zone vive
+  // sections[i] = { el, pageRef, mds, split, cm, splitSig }
+  //   mds/split : nœuds du fac-similé (gardés en cache quand la page est vive)
+  //   splitSig  : signature du contenu de split (code, sortie, zoom, thème...)
+  let sections = [];
+  let indiceLive = 0;
   let mdEngine = null;
+  let mermaidPret = false;
 
   let settleTimer = null;
-  let rebuildTimer = null;
   let enActivation = false;
   let ignoreScrollJusqua = 0;   // ignorer nos propres scrollTop / reflows
   let scrollReference = 0;      // position d'ancrage pour l'hystérésis
   let verrouPrecedent = null;
+  let styleApplique = { fontSize: null, theme: null };
+  let dispositionAppliquee = "";
+  let ecouteMoletteCtrl = false;
 
   function log() {
     if (!DEBUG) return;
@@ -202,10 +216,70 @@
     });
   }
 
-  // ── Fac-similé : contenu d'une section inactive ──────────────────────────
+  // Mermaid : même rendu que markdown.js (copie locale : fonction privée
+  // là-bas), pour que les pages jamais encore ouvertes aient déjà leurs
+  // diagrammes, à la même hauteur que dans la zone vive.
+  function mermaidDisponible() {
+    if (mermaidPret) return true;
+    if (typeof window.mermaid === "undefined") return false;
+    try {
+      window.mermaid.initialize({
+        startOnLoad: false,
+        securityLevel: "strict",
+        theme: "default"
+      });
+      mermaidPret = true;
+    } catch (e) {
+      log("Mermaid : initialisation impossible", e);
+    }
+    return mermaidPret;
+  }
+
+  function rendreMermaid(root) {
+    if (!root || !mermaidDisponible()) return;
+    root.querySelectorAll("code.language-mermaid").forEach((codeEl) => {
+      const pre = codeEl.closest("pre") || codeEl;
+      const code = String(codeEl.textContent || "").trim();
+      if (!code) return;
+
+      const holder = document.createElement("div");
+      holder.className = "mermaid-rendu";
+      pre.replaceWith(holder);
+
+      const id = "scmmd-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8);
+
+      const afficherCodeBrut = () => {
+        const orphan1 = document.getElementById(id);
+        if (orphan1) orphan1.remove();
+        const orphan2 = document.getElementById("d" + id);
+        if (orphan2) orphan2.remove();
+        holder.className = "mermaid-erreur";
+        const block = document.createElement("pre");
+        block.textContent = code;
+        holder.innerHTML = "";
+        holder.appendChild(block);
+      };
+
+      let p;
+      try {
+        p = window.mermaid.render(id, code);
+      } catch (err) {
+        afficherCodeBrut();
+        return;
+      }
+      Promise.resolve(p)
+        .then((res) => {
+          const svg = res && res.svg ? res.svg : "";
+          if (svg) holder.innerHTML = svg;
+          else afficherCodeBrut();
+        })
+        .catch(() => afficherCodeBrut());
+    });
+  }
+
+  // ── Construction des fac-similés ─────────────────────────────────────────
   // Reprend les classes CSS du vrai système (md-block, exercise-preview,
-  // two-cols, output...) pour une hauteur et un rendu identiques : l'échange
-  // fac-similé <-> zone vive doit être invisible.
+  // two-cols, output...) pour une hauteur et un rendu identiques.
 
   function construireBarreOutilsInerte() {
     const toolbar = document.createElement("div");
@@ -243,6 +317,7 @@
       remplacerImagesAttachment(preview, page);
       nettoyerApercu(preview);
       transformerMarqueursAide(preview);
+      rendreMermaid(preview);
     }
 
     wrap.appendChild(preview);
@@ -250,20 +325,97 @@
     return block;
   }
 
+  function construireMds(page) {
+    const mds = (Array.isArray(page.markdowns) && page.markdowns.length)
+      ? page.markdowns
+      : [String(page.comment || "")];
+    const zoneMds = document.createElement("div");
+    zoneMds.className = "sc-mds";
+    mds.forEach((texte) => zoneMds.appendChild(construireBlocMarkdown(texte, page)));
+    return zoneMds;
+  }
+
+  // Clone EXACT du markdown vif (avant qu'on le quitte) : images déjà
+  // décodées, Mermaid déjà dessiné => même hauteur, sans attente.
+  function clonerMarkdownsVifs(page) {
+    const mdc = document.getElementById("markdownsContainer");
+    if (!mdc) return null;
+
+    const clone = mdc.cloneNode(true);
+    clone.removeAttribute("id");
+    clone.className = "sc-mds";
+
+    // Bloc en cours d'édition : on montre l'aperçu rendu (comme à la sortie
+    // de page dans un notebook).
+    clone.querySelectorAll(".md-block").forEach((block) => {
+      const ta = block.querySelector(".md-block-textarea");
+      if (ta && !ta.classList.contains("hidden")) {
+        block.replaceWith(construireBlocMarkdown(ta.value, page));
+      }
+    });
+
+    clone.querySelectorAll(".md-block-textarea").forEach((ta) => ta.remove());
+    clone.querySelectorAll(".md-block-preview").forEach((pv) => {
+      pv.classList.add("sc-md");
+      pv.removeAttribute("tabindex");
+      pv.removeAttribute("title");
+    });
+    clone.querySelectorAll(".md-block-toolbar button").forEach((b) => { b.tabIndex = -1; });
+    return clone;
+  }
+
   function layoutHorizontalActif() {
     const mainSplit = document.getElementById("mainSplit");
     return !!(mainSplit && mainSplit.classList.contains("horizontal-layout"));
   }
 
+  // Disposition de la zone vive, sans les classes passagères (glisser).
+  function signatureDisposition() {
+    const ms = document.getElementById("mainSplit");
+    if (!ms) return "";
+    const classes = ms.className.split(/\s+/)
+      .filter((c) => c && c !== "is-dragging")
+      .sort()
+      .join(" ");
+    return classes + "|" + (ms.style.gridTemplateColumns || "");
+  }
+
+  function styleCourant() {
+    const edit = editeur();
+    if (!edit) return { fontSize: "", theme: "" };
+    const wrapper = edit.getWrapperElement();
+    return {
+      fontSize: wrapper ? wrapper.style.fontSize : "",
+      theme: String(edit.getOption("theme") || "")
+    };
+  }
+
+  function signatureSplit(index) {
+    const gestionnaire = pm();
+    const page = gestionnaire ? gestionnaire.getPageRef(index) : null;
+    const st = styleCourant();
+    return [
+      page ? String(page.code || "") : "",
+      (gestionnaire && typeof gestionnaire.getPageOutputText === "function")
+        ? gestionnaire.getPageOutputText(index) : "",
+      st.fontSize,
+      st.theme,
+      signatureDisposition()
+    ].join("\u0001");
+  }
+
   // Même hauteur "définie" que l'éditeur vif : la formule est reprise
   // d'ajusterHauteurEditeurHorizontal (interpreteur.js / sqlInterpreteur.js) —
-  // max(6 lignes, contenu + 3 lignes). Indispensable pour que l'échange
-  // fac-similé <-> zone vive se fasse sans variation de hauteur.
+  // max(6 lignes, contenu + 3 lignes). Si elle change là-bas, la changer ici.
   function ajusterHauteurFacsimile(cm) {
     if (!cm) return;
     const scroller = cm.getScrollerElement();
     const wrapper = cm.getWrapperElement();
     if (!scroller || !wrapper) return;
+
+    // Mesures à jour d'abord (CodeMirror créé hors document, ou zoom changé) :
+    // sans cela heightAtLine renvoie 0 et la hauteur tombe à 6 lignes.
+    cm.refresh();
 
     const lastLine = Math.max(0, cm.lineCount() - 1);
     const lastLineTop = cm.heightAtLine(lastLine, "local");
@@ -283,35 +435,24 @@
     cm.refresh();
   }
 
-  // Remplit la section d'index donné avec un fac-similé de sa page
-  // (la section doit être vide de la zone vive).
-  function remplirFacsimile(section, index) {
+  function appliquerTaillesTexte(racine, fontSize) {
+    racine.querySelectorAll(".sc-md, .sc-output, .sc-code-brut").forEach((el) => {
+      if (el.style.fontSize !== fontSize) el.style.fontSize = fontSize;
+    });
+  }
+
+  // Code + sortie d'un fac-similé, même structure que #mainSplit.
+  // Renvoie { split, cm } ; split est encore détaché du document.
+  function construireSplit(index, page) {
     const gestionnaire = pm();
     const edit = editeur();
-    const page = (gestionnaire && typeof gestionnaire.getPageRef === "function")
-      ? gestionnaire.getPageRef(index) : null;
-
-    section.el.textContent = "";
-    section.el.classList.add("sc-fac");
-    section.el.classList.remove("sc-live");
-    section.cm = null;
-    if (!page) return;
-
-    // 1. Blocs markdown.
-    const mds = (Array.isArray(page.markdowns) && page.markdowns.length)
-      ? page.markdowns
-      : [String(page.comment || "")];
-    const zoneMds = document.createElement("div");
-    zoneMds.className = "sc-mds";
-    mds.forEach((texte) => zoneMds.appendChild(construireBlocMarkdown(texte, page)));
-    section.el.appendChild(zoneMds);
-
-    // 2. Code + sortie, avec la même structure que #mainSplit.
     const horizontal = layoutHorizontalActif();
     const mainSplit = document.getElementById("mainSplit");
 
     const split = document.createElement("div");
-    split.className = mainSplit ? mainSplit.className : "two-cols";
+    split.className = mainSplit
+      ? mainSplit.className.replace(/\bis-dragging\b/g, "").trim()
+      : "two-cols";
     if (mainSplit && mainSplit.style.gridTemplateColumns) {
       split.style.gridTemplateColumns = mainSplit.style.gridTemplateColumns;
     }
@@ -325,8 +466,9 @@
     const sortieTexte = (gestionnaire && typeof gestionnaire.getPageOutputText === "function")
       ? gestionnaire.getPageOutputText(index) : "";
 
+    let cm = null;
     if (window.CodeMirror && edit) {
-      section.cm = new window.CodeMirror(editorContainer, {
+      cm = new window.CodeMirror(editorContainer, {
         value: String(page.code || ""),
         mode: edit.getOption("mode"),
         theme: edit.getOption("theme"),
@@ -336,10 +478,10 @@
         viewportMargin: Infinity
       });
       // Mêmes styles EN LIGNE que l'éditeur vif (updateEditorLayoutMode) :
-      // indispensable, car le CSS de CodeMirror (height:300px) est chargé
-      // APRÈS style.css et gagnerait sinon sur les fac-similés.
-      const wrapperFac = section.cm.getWrapperElement();
-      const scrollerFac = section.cm.getScrollerElement();
+      // le CSS de CodeMirror (height:300px) est chargé APRÈS style.css et
+      // gagnerait sinon sur les fac-similés.
+      const wrapperFac = cm.getWrapperElement();
+      const scrollerFac = cm.getScrollerElement();
       if (wrapperFac) {
         wrapperFac.style.height = "auto";
         wrapperFac.style.flex = "0 0 auto";
@@ -353,7 +495,6 @@
         scrollerFac.style.overflowX = "auto";
       }
     } else {
-      // Secours improbable : CodeMirror absent, simple <pre>.
       const pre = document.createElement("pre");
       pre.className = "sc-code-brut";
       pre.textContent = String(page.code || "");
@@ -361,7 +502,6 @@
     }
 
     if (horizontal) {
-      // Mode horizontal : sortie sous l'éditeur, pas de colonne droite.
       // Mêmes dimensions que #horizontalOutputWrap / #outputhorizontal
       // (règles .sc-horiz-wrap / .sc-output-h dans style.css).
       const wrapSortie = document.createElement("div");
@@ -389,11 +529,46 @@
       split.appendChild(rightCol);
     }
 
-    section.el.appendChild(split);
-    if (section.cm) {
-      section.cm.refresh();
-      ajusterHauteurFacsimile(section.cm);
+    return { split, cm };
+  }
+
+  // Remplit une section en fac-similé. mdsPrepare : clone du markdown vif
+  // (bascule depuis cette page) ou null (rendu depuis le modèle).
+  // Le code/sortie est réutilisé tel quel si sa signature n'a pas changé.
+  function remplirFacsimile(section, index, mdsPrepare) {
+    const gestionnaire = pm();
+    const page = gestionnaire ? gestionnaire.getPageRef(index) : null;
+
+    section.el.textContent = "";
+    section.el.classList.add("sc-fac");
+    section.el.classList.remove("sc-live");
+    section.pageRef = page;
+
+    if (!page) {
+      section.mds = null;
+      section.split = null;
+      section.cm = null;
+      section.splitSig = "";
+      return;
     }
+
+    section.mds = mdsPrepare || construireMds(page);
+    section.el.appendChild(section.mds);
+
+    const sig = signatureSplit(index);
+    if (section.split && section.splitSig === sig) {
+      section.el.appendChild(section.split);
+      if (section.cm) section.cm.refresh();
+    } else {
+      const r = construireSplit(index, page);
+      section.split = r.split;
+      section.cm = r.cm;
+      section.splitSig = sig;
+      section.el.appendChild(section.split);
+      if (section.cm) ajusterHauteurFacsimile(section.cm);
+    }
+
+    appliquerTaillesTexte(section.el, styleCourant().fontSize);
   }
 
   // ── Transplantation de la zone vive, SUR PLACE ───────────────────────────
@@ -404,32 +579,31 @@
     };
   }
 
-  // Déplace la zone vive dans la section j ; l'ancienne section vive est
-  // re-remplie en fac-similé depuis le modèle (déjà sauvegardé par
-  // loadPageIntoEditor). Seules ces DEUX sections changent, sur place.
-  function deplacerLiveVers(j) {
-    if (j < 0 || j >= sections.length) return;
+  // Déplace la zone vive dans la section j ; le fac-similé de j est détaché
+  // mais gardé en cache ; l'ancienne section vive redevient fac-similé.
+  function deplacerLiveVers(j, mdsCloneAncienne) {
     const { mdc, split } = widgetsVifs();
-    if (!mdc || !split) return;
+    const gestionnaire = pm();
+    if (!mdc || !split || !sections[j] || !gestionnaire) return;
 
     const ancienIndice = indiceLive;
     const secJ = sections[j];
 
     secJ.el.textContent = "";
-    secJ.cm = null;
     secJ.el.classList.remove("sc-fac");
     secJ.el.classList.add("sc-live");
-    secJ.el.appendChild(mdc);   // appendChild retire d'office de l'ancienne section
+    secJ.el.appendChild(mdc);
     secJ.el.appendChild(split);
+    secJ.pageRef = gestionnaire.getPageRef(j);
 
     indiceLive = j;
 
     if (ancienIndice !== j && sections[ancienIndice]) {
-      remplirFacsimile(sections[ancienIndice], ancienIndice);
+      remplirFacsimile(sections[ancienIndice], ancienIndice, mdsCloneAncienne);
     }
   }
 
-  // ── Construction complète du ruban (init, ajout/suppression de page) ─────
+  // ── Construction complète du ruban (init, ajout/suppression, import) ─────
   function construireRuban() {
     const gestionnaire = pm();
     if (!gestionnaire || !rubanEl) return;
@@ -450,7 +624,7 @@
       el.className = "sc-section";
       el.dataset.scIndex = String(i);
       rubanEl.appendChild(el);
-      sections.push({ el, cm: null });
+      sections.push({ el, pageRef: null, mds: null, split: null, cm: null, splitSig: "" });
     }
 
     indiceLive = actif;
@@ -459,17 +633,19 @@
       secActive.el.classList.add("sc-live");
       if (mdc) secActive.el.appendChild(mdc);
       if (split) secActive.el.appendChild(split);
+      secActive.pageRef = gestionnaire.getPageRef(actif);
     }
 
     for (let i = 0; i < total; i++) {
-      if (i !== actif) remplirFacsimile(sections[i], i);
+      if (i !== actif) remplirFacsimile(sections[i], i, null);
     }
 
     const edit = editeur();
     if (edit) edit.refresh();
 
+    styleApplique = styleCourant();
+    dispositionAppliquee = signatureDisposition();
     majVisibiliteVerrou();
-    appliquerStyleEditeurReel();
     log("ruban construit :", total, "sections, page active", actif + 1);
   }
 
@@ -477,37 +653,36 @@
   function majVisibiliteVerrou() {
     const verrou = navAutorisee();
     sections.forEach((s, i) => {
-      s.el.style.display = (verrou || i === indiceLive) ? "" : "none";
+      const voulu = (verrou || i === indiceLive) ? "" : "none";
+      if (s.el.style.display !== voulu) s.el.style.display = voulu;
     });
     verrouPrecedent = verrou;
   }
 
-  // ── Zoom / thème : répercuter l'éditeur réel sur les fac-similés ─────────
-  function appliquerStyleEditeurReel() {
-    const edit = editeur();
-    if (!edit) return;
+  // ── Zoom / thème : uniquement sur VRAI changement ────────────────────────
+  // Le style de l'éditeur vif est réécrit à chaque frappe (hauteur) et sa
+  // classe à chaque focus/blur : sans ce filtre, toutes les pages étaient
+  // redessinées à chaque frappe et à chaque clic sur Exécuter.
+  function surStyleEditeur() {
+    const st = styleCourant();
+    if (st.fontSize === styleApplique.fontSize && st.theme === styleApplique.theme) return;
+    styleApplique = st;
 
-    // Un changement de taille fait grandir/rétrécir tout le document : le
-    // navigateur émet des scrolls de reflow qui ne sont pas un déplacement
-    // voulu par l'élève. On les ignore, et on réarme l'hystérésis après.
-    ignoreScrollJusqua = Math.max(ignoreScrollJusqua, maintenantMs() + 450);
-    setTimeout(armerHysteresis, 460);
+    // Le zoom fait grandir/rétrécir tout le document : les scrolls de reflow
+    // ne sont pas un déplacement voulu par l'élève.
+    ignoreScrollJusqua = Math.max(ignoreScrollJusqua, maintenantMs() + IGNORE_REFLOW_MS);
+    setTimeout(armerHysteresis, IGNORE_REFLOW_MS + 10);
 
-    const wrapper = edit.getWrapperElement();
-    const fontSize = wrapper ? wrapper.style.fontSize : "";
-    const theme = edit.getOption("theme");
-
-    sections.forEach((s) => {
+    sections.forEach((s, i) => {
+      if (i === indiceLive || !s.split) return;
       if (s.cm) {
         const w = s.cm.getWrapperElement();
-        if (w && w.style.fontSize !== fontSize) w.style.fontSize = fontSize;
-        if (s.cm.getOption("theme") !== theme) s.cm.setOption("theme", theme);
-        s.cm.refresh();
+        if (w && w.style.fontSize !== st.fontSize) w.style.fontSize = st.fontSize;
+        if (s.cm.getOption("theme") !== st.theme) s.cm.setOption("theme", st.theme);
         ajusterHauteurFacsimile(s.cm);
       }
-      s.el.querySelectorAll(".sc-md, .sc-output, .sc-code-brut").forEach((el) => {
-        el.style.fontSize = fontSize;
-      });
+      appliquerTaillesTexte(s.el, st.fontSize);
+      s.splitSig = signatureSplit(i);
     });
   }
 
@@ -516,42 +691,47 @@
     if (!edit) return;
     const wrapper = edit.getWrapperElement();
     if (!wrapper) return;
-    const obs = new MutationObserver(() => appliquerStyleEditeurReel());
+    const obs = new MutationObserver(surStyleEditeur);
     obs.observe(wrapper, { attributes: true, attributeFilter: ["style", "class"] });
   }
 
-  // Disposition changée (bascule horizontal/vertical, colonnes
-  // redimensionnées) : les fac-similés doivent reprendre la même structure,
-  // sinon leurs hauteurs ne correspondent plus à la zone vive.
+  // Disposition changée (horizontal/vertical, colonnes redimensionnées) :
+  // les fac-similés reprennent la même structure (hauteurs identiques).
   let dispositionTimer = null;
   function observerDisposition() {
     const mainSplit = document.getElementById("mainSplit");
     if (!mainSplit) return;
     const obs = new MutationObserver(() => {
+      if (signatureDisposition() === dispositionAppliquee) return;
       if (dispositionTimer) clearTimeout(dispositionTimer);
       dispositionTimer = setTimeout(() => {
         dispositionTimer = null;
-        ignoreScrollJusqua = Math.max(ignoreScrollJusqua, maintenantMs() + 450);
+        const sig = signatureDisposition();
+        if (sig === dispositionAppliquee) return;
+        dispositionAppliquee = sig;
+        ignoreScrollJusqua = Math.max(ignoreScrollJusqua, maintenantMs() + IGNORE_REFLOW_MS);
         sections.forEach((s, i) => {
-          if (i !== indiceLive) remplirFacsimile(s, i);
+          if (i !== indiceLive) remplirFacsimile(s, i, null);
         });
-        appliquerStyleEditeurReel();
-        setTimeout(armerHysteresis, 460);
+        setTimeout(armerHysteresis, IGNORE_REFLOW_MS + 10);
       }, 200);
     });
     obs.observe(mainSplit, { attributes: true, attributeFilter: ["style", "class"] });
   }
 
-  // ── Géométrie ────────────────────────────────────────────────────────────
+  // ── Géométrie (repère : contenu de #zonePython) ──────────────────────────
   function pageAuMilieu() {
     if (!sections.length) return indiceLive;
-    const zpRect = zonePython.getBoundingClientRect();
-    const milieu = zpRect.top + zonePython.clientHeight / 2;
-
-    let resultat = 0;
+    const milieu = zonePython.scrollTop + zonePython.clientHeight / 2;
+    let resultat = indiceLive;
+    let trouve = false;
     for (let i = 0; i < sections.length; i++) {
-      if (sections[i].el.getBoundingClientRect().top <= milieu) resultat = i;
-      else break;
+      if (sections[i].el.style.display === "none") continue;
+      if (!trouve || sections[i].el.offsetTop <= milieu) {
+        resultat = i;
+        trouve = true;
+      }
+      if (sections[i].el.offsetTop > milieu) break;
     }
     return resultat;
   }
@@ -562,66 +742,77 @@
   }
 
   function armerHysteresis() {
-    scrollReference = zonePython.scrollTop;
-  }
-
-  // Ramène le haut de la section el à la position écran ancreViewport
-  // (coordonnées viewport mesurées AVANT l'échange de contenu).
-  function compenser(el, ancreViewport) {
-    const delta = el.getBoundingClientRect().top - ancreViewport;
-    if (Math.abs(delta) > 0.5) poserScroll(zonePython.scrollTop + delta);
+    if (zonePython) scrollReference = zonePython.scrollTop;
   }
 
   // ── Indicateur "n/N" en bas pendant le défilement ────────────────────────
-  function majIndicateurDefilement(indiceMedian) {
+  function majIndicateurDefilement(indice) {
     const gestionnaire = pm();
     const indicateur = document.getElementById("pagesMultiplesIndicator");
     if (!gestionnaire || !indicateur) return;
-    const texte = `${indiceMedian + 1}/${gestionnaire.getPagesCount()}`;
+    const texte = `${indice + 1}/${gestionnaire.getPagesCount()}`;
     if (indicateur.textContent !== texte) indicateur.textContent = texte;
   }
 
-  // ── Bascule réelle vers une page (scroll posé ou clic) ───────────────────
-  function activerPage(nouvelIndice, options = {}) {
+  // ── Bascule réelle vers une page (scroll posé, clic, touche) ─────────────
+  // La compensation ne corrige QUE les variations de mise en page : on
+  // compare la position de la section dans le DOCUMENT avant/après, et on
+  // ajoute l'écart au scroll courant. Le défilement fait par l'élève
+  // pendant ce temps est donc toujours conservé.
+  function activerPage(j, options = {}) {
     const gestionnaire = pm();
     const edit = editeur();
     if (!gestionnaire || !edit || enActivation) return;
-    if (nouvelIndice === indiceLive) return;
-    if (nouvelIndice < 0 || nouvelIndice >= sections.length) return;
+    if (j === indiceLive || j < 0 || j >= sections.length) return;
     if (!navAutorisee()) return;
 
     enActivation = true;
-    const secJ = sections[nouvelIndice].el;
-    const ancre = secJ.getBoundingClientRect().top;
+    if (settleTimer) { clearTimeout(settleTimer); settleTimer = null; }
 
-    log("activation page", nouvelIndice + 1);
+    const secJ = sections[j].el;
+    const avant = secJ.offsetTop;
+    const ancienne = sections[indiceLive];
+    const clone = clonerMarkdownsVifs(ancienne ? ancienne.pageRef : null);
 
-    // Sauvegarde la page quittée (code, markdowns, sortie) et charge la
-    // nouvelle dans la zone vive. En mode ruban, loadPageIntoEditor ne touche
-    // ni au scroll ni au focus (voir pagesmultiples.js).
-    gestionnaire.loadPageIntoEditor(nouvelIndice);
-    deplacerLiveVers(nouvelIndice);
+    log("activation page", j + 1);
+
+    // Sauvegarde la page quittée et charge la nouvelle dans la zone vive.
+    // En mode ruban, loadPageIntoEditor ne touche ni au scroll ni au focus.
+    gestionnaire.loadPageIntoEditor(j);
+    deplacerLiveVers(j, clone);
     edit.refresh();
-    compenser(secJ, ancre);
-    appliquerStyleEditeurReel();
+
+    const delta = secJ.offsetTop - avant;
+    if (Math.abs(delta) >= 1) poserScroll(zonePython.scrollTop + delta);
+    let reference = secJ.offsetTop;
 
     requestAnimationFrame(() => {
-      compenser(secJ, ancre);
-      if (options.focus) {
-        edit.focus();
-        if (options.curseur) edit.setCursor(options.curseur, null, { scroll: false });
-        compenser(secJ, ancre);
-      }
-    });
+      // Mise en page tardive (rafraîchissement CodeMirror) : même principe.
+      const d = secJ.offsetTop - reference;
+      if (Math.abs(d) >= 1) poserScroll(zonePython.scrollTop + d);
 
-    setTimeout(() => {
-      compenser(secJ, ancre);
+      if (options.curseur) {
+        const st = zonePython.scrollTop;
+        edit.setCursor(options.curseur, null, { scroll: false });
+        edit.focus();
+        if (zonePython.scrollTop !== st) poserScroll(st);
+      }
+
       armerHysteresis();
+      majIndicateurDefilement(indiceLive);
       enActivation = false;
-    }, 250);
+    });
   }
 
   // ── Défilement : indicateur en direct + bascule à l'arrêt ────────────────
+  function evaluerBascule() {
+    settleTimer = null;
+    if (enActivation || !navAutorisee()) return;
+    const cible = pageAuMilieu();
+    if (cible !== indiceLive) activerPage(cible, {});
+    else majIndicateurDefilement(cible);
+  }
+
   function surScroll() {
     if (maintenantMs() < ignoreScrollJusqua) return;
     if (!navAutorisee() || sections.length <= 1) return;
@@ -633,14 +824,20 @@
     majIndicateurDefilement(pageAuMilieu());
 
     if (settleTimer) clearTimeout(settleTimer);
-    settleTimer = setTimeout(() => {
-      settleTimer = null;
-      if (enActivation) return;
-      if (maintenantMs() < ignoreScrollJusqua) return;
-      const cible = pageAuMilieu();
-      if (cible !== indiceLive) activerPage(cible, {});
-      else majIndicateurDefilement(cible);
-    }, SETTLE_MS);
+    settleTimer = setTimeout(evaluerBascule, SETTLE_MS);
+  }
+
+  // Premier clic / première touche pendant qu'une bascule attend : on la
+  // fait tout de suite, pour qu'Exécuter (bouton ou raccourci) agisse sur
+  // la page affichée en bas. Un clic DANS une section inactive est laissé
+  // à surMousedown, qui active la page cliquée.
+  function forcerBasculeEnAttente(e) {
+    if (!settleTimer) return;
+    const dansFac = e && e.target && e.target.closest
+      ? e.target.closest(".sc-section.sc-fac") : null;
+    if (dansFac) return;
+    clearTimeout(settleTimer);
+    evaluerBascule();
   }
 
   // ── Clic dans une section inactive : activation ──────────────────────────
@@ -653,7 +850,8 @@
     if (e.target.closest("a, .aide-btn")) return;
     e.preventDefault();
 
-    // Clic dans le code : mémoriser la position pour y poser le curseur.
+    // Clic dans le code : position du curseur. Ailleurs (markdown, sortie) :
+    // on active la page sans donner le focus à l'éditeur.
     let posCurseur = null;
     const cm = sections[j].cm;
     if (cm) {
@@ -662,32 +860,39 @@
         posCurseur = cm.coordsChar({ left: e.clientX, top: e.clientY }, "window");
       }
     }
-    activerPage(j, { focus: true, curseur: posCurseur });
+    activerPage(j, { curseur: posCurseur });
   }
 
   // ── Changements externes (boutons, barre latérale, import, groupe...) ────
+  // Appelé SANS délai dans l'observateur de l'indicateur : l'échange se fait
+  // avant l'affichage de l'image suivante (pas de contenu fugitif).
   function surChangementExterne() {
     const gestionnaire = pm();
-    if (!gestionnaire) return;
+    if (!gestionnaire || !rubanEl) return;
+    if (enActivation) return;
 
     const total = gestionnaire.getPagesCount();
     const actif = gestionnaire.getActivePageIndex();
 
-    // Nombre de pages changé (ajout, suppression, import) : tout refaire.
-    if (total !== sections.length) {
+    // Pages ajoutées, supprimées, ou remplacées (import, IA...) : tout refaire.
+    const memesPages = total === sections.length &&
+      sections.every((s, i) => s.pageRef === gestionnaire.getPageRef(i));
+    if (!memesPages) {
+      if (settleTimer) { clearTimeout(settleTimer); settleTimer = null; }
       construireRuban();
       allerAuDebutDeSection(indiceLive);
       return;
     }
 
     // Page active changée hors ruban (boutons, barre latérale, groupe...).
+    // Le markdown vif montre déjà la nouvelle page : l'ancienne est rendue
+    // depuis le modèle (pas de clone).
     if (actif !== indiceLive) {
-      if (enActivation) return; // notre propre bascule, déjà gérée
-      deplacerLiveVers(actif);
+      if (settleTimer) { clearTimeout(settleTimer); settleTimer = null; }
+      deplacerLiveVers(actif, null);
       const edit = editeur();
       if (edit) edit.refresh();
       majVisibiliteVerrou();
-      appliquerStyleEditeurReel();
       allerAuDebutDeSection(actif);
       return;
     }
@@ -700,34 +905,29 @@
     const sec = sections[j];
     if (!sec) return;
     poserScroll(sec.el.offsetTop);
+    armerHysteresis();
+    const reference = sec.el.offsetTop;
     requestAnimationFrame(() => {
-      poserScroll(sec.el.offsetTop);
+      const d = sec.el.offsetTop - reference;
+      if (Math.abs(d) >= 1) poserScroll(zonePython.scrollTop + d);
       armerHysteresis();
     });
-    setTimeout(armerHysteresis, 300);
   }
 
   function observerIndicateur() {
     const indicateur = document.getElementById("pagesMultiplesIndicator");
     if (!indicateur) return;
-    const obs = new MutationObserver(() => {
-      if (rebuildTimer) clearTimeout(rebuildTimer);
-      rebuildTimer = setTimeout(() => {
-        rebuildTimer = null;
-        surChangementExterne();
-      }, REBUILD_DEBOUNCE_MS);
-    });
+    const obs = new MutationObserver(surChangementExterne);
     obs.observe(indicateur, { childList: true, subtree: true, characterData: true });
   }
 
   // ── Zoom Ctrl+molette au-dessus des fac-similés ──────────────────────────
-  // On rejoue l'événement sur l'éditeur réel : c'est lui qui porte la logique
-  // de zoom (interpreteur.js / sqlInterpreteur.js), et notre observateur de
-  // style répercute ensuite la nouvelle taille partout.
+  // Rejoué sur l'éditeur réel (qui porte la logique de zoom) ; l'observateur
+  // de style répercute ensuite la nouvelle taille partout.
   function surMoletteFacsimile(e) {
     if (!e.ctrlKey) return;
     // Dans la section vive, l'éditeur et les sorties ont déjà leurs propres
-    // écouteurs : ne pas rejouer (sinon boucle d'événements).
+    // écouteurs : ne pas rejouer (sinon double zoom).
     const secEl = e.target && e.target.closest ? e.target.closest(".sc-section") : null;
     if (secEl && sections[indiceLive] && secEl === sections[indiceLive].el) return;
     e.preventDefault();
@@ -740,6 +940,20 @@
       ctrlKey: true,
       cancelable: true
     }));
+  }
+
+  // Un écouteur de molette NON passif oblige le navigateur à attendre le
+  // JavaScript avant chaque cran de défilement : on ne le pose que pendant
+  // l'appui sur Ctrl, le défilement normal reste totalement libre.
+  function majEcouteMoletteCtrl(ctrlEnfonce) {
+    if (!rubanEl) return;
+    if (ctrlEnfonce && !ecouteMoletteCtrl) {
+      rubanEl.addEventListener("wheel", surMoletteFacsimile, { passive: false });
+      ecouteMoletteCtrl = true;
+    } else if (!ctrlEnfonce && ecouteMoletteCtrl) {
+      rubanEl.removeEventListener("wheel", surMoletteFacsimile, { passive: false });
+      ecouteMoletteCtrl = false;
+    }
   }
 
   // ── Initialisation ───────────────────────────────────────────────────────
@@ -766,8 +980,17 @@
     zonePython.insertBefore(rubanEl, split);
 
     rubanEl.addEventListener("mousedown", surMousedown);
-    rubanEl.addEventListener("wheel", surMoletteFacsimile, { passive: false });
     zonePython.addEventListener("scroll", surScroll, { passive: true });
+
+    document.addEventListener("pointerdown", forcerBasculeEnAttente, true);
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Control") majEcouteMoletteCtrl(true);
+      forcerBasculeEnAttente(e);
+    }, true);
+    document.addEventListener("keyup", (e) => {
+      if (e.key === "Control") majEcouteMoletteCtrl(false);
+    }, true);
+    window.addEventListener("blur", () => majEcouteMoletteCtrl(false));
 
     observerIndicateur();
     observerStyleEditeurReel();
