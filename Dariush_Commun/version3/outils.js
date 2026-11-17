@@ -263,8 +263,15 @@ function autoResizeTextarea(el) {
   el.style.height = el.scrollHeight + "px";
 
   // Restaure les positions : le texte ne bouge plus à l'écran.
-  parents.forEach(([node, top]) => { node.scrollTop = top; });
-  window.scrollTo(winX, winY);
+  // Uniquement si elles ont VRAIMENT changé : réécrire une position de
+  // défilement, même identique, arrête net une animation de défilement en
+  // cours (molette avec le défilement doux) — la vue "saute et revient".
+  parents.forEach(([node, top]) => {
+    if (node.scrollTop !== top) node.scrollTop = top;
+  });
+  if (window.scrollX !== winX || window.scrollY !== winY) {
+    window.scrollTo(winX, winY);
+  }
 }
 
 
