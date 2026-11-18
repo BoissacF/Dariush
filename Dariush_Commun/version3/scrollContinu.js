@@ -33,6 +33,12 @@
     si c'est dans le code).
   - Zoom (Ctrl+molette, panneau zoom) : répercuté sur toutes les sections.
   - Navigation verrouillée (groupe / aide) : sections inactives masquées.
+  - Bouton lecture (petit triangle) en haut à gauche de chaque cellule de
+    code : vert sur la page active (exécute, comme le bouton Exécuter),
+    rouge sur les autres (active la page puis l'exécute), gris quand
+    Exécuter est indisponible (exécution en cours, interpréteur en
+    chargement, pas à pas). Pendant une exécution, la page active ne change
+    pas au défilement : la bascule se fait quand l'exécution est terminée.
 
   Module autonome : ne fait RIEN si window.SCROLL_CONTINU_ACTIF !== true
   (Dariush Linux ne pose pas ce drapeau et garde scrollFlipPage).
@@ -70,6 +76,11 @@
   let styleApplique = { fontSize: null, theme: null };
   let dispositionAppliquee = "";
   let ecouteMoletteCtrl = false;
+
+  let boutonExecuter = null;    // #runButton du menu (source de vérité)
+  let boutonLectureVif = null;  // triangle de la cellule active
+  let dejaPret = false;         // #runButton déjà vu actif au moins une fois
+  let basculeEnAttente = false; // bascule différée par une exécution en cours
 
   function log() {
     if (!DEBUG) return;
@@ -494,6 +505,7 @@
         scrollerFac.style.overflowY = "hidden";
         scrollerFac.style.overflowX = "auto";
       }
+      if (wrapperFac) wrapperFac.appendChild(creerBoutonLecture(false));
     } else {
       const pre = document.createElement("pre");
       pre.className = "sc-code-brut";
@@ -569,6 +581,7 @@
     }
 
     appliquerTaillesTexte(section.el, styleCourant().fontSize);
+    section.el.querySelectorAll(".sc-run-btn").forEach(majBoutonLectureFac);
   }
 
   // ── Transplantation de la zone vive, SUR PLACE ───────────────────────────
@@ -791,6 +804,7 @@
     if (!gestionnaire || !edit || enActivation) return;
     if (j === indiceLive || j < 0 || j >= sections.length) return;
     if (!navAutorisee()) return;
+    if (executionEnCours()) return;
 
     enActivation = true;
     if (settleTimer) { clearTimeout(settleTimer); settleTimer = null; }
@@ -843,8 +857,14 @@
     settleTimer = null;
     if (enActivation || !navAutorisee()) return;
     const cible = pageAuMilieu();
-    if (cible !== indiceLive) activerPage(cible, {});
-    else majIndicateurDefilement(cible);
+    if (cible !== indiceLive) {
+      // Pendant une exécution, la page qui tourne reste active (sa sortie
+      // ne doit pas atterrir dans une autre page) : bascule à la fin.
+      if (executionEnCours()) { basculeEnAttente = true; return; }
+      activerPage(cible, {});
+    } else {
+      majIndicateurDefilement(cible);
+    }
   }
 
   function surScroll() {
@@ -867,8 +887,16 @@
   // à surMousedown, qui active la page cliquée.
   function forcerBasculeEnAttente(e) {
     if (!settleTimer) return;
-    const dansFac = e && e.target && e.target.closest
-      ? e.target.closest(".sc-section.sc-fac") : null;
+    const cible = e && e.target && e.target.closest ? e.target : null;
+    // Bouton lecture : c'est CETTE cellule que l'élève vise. Sur la cellule
+    // active, on annule la bascule en attente ; sur une autre, son propre
+    // clic active la bonne page.
+    const lecture = cible ? cible.closest(".sc-run-btn") : null;
+    if (lecture) {
+      if (lecture === boutonLectureVif) { clearTimeout(settleTimer); settleTimer = null; }
+      return;
+    }
+    const dansFac = cible ? cible.closest(".sc-section.sc-fac") : null;
     if (dansFac) return;
     clearTimeout(settleTimer);
     evaluerBascule();
@@ -881,7 +909,8 @@
     const j = sections.findIndex((s) => s.el === secEl);
     if (j < 0 || j === indiceLive) return;
     if (!navAutorisee()) return;
-    if (e.target.closest("a, .aide-btn")) return;
+    if (e.target.closest("a, .aide-btn, .sc-run-btn")) return;
+    if (executionEnCours()) return;
     e.preventDefault();
 
     // Clic dans le code : position du curseur. Ailleurs (markdown, sortie) :
@@ -990,6 +1019,101 @@
     }
   }
 
+  // ── Bouton lecture (triangle) de chaque cellule de code ──────────────────
+  // Source de vérité : #runButton du menu, désactivé dès qu'on ne peut pas
+  // exécuter (interpréteur en chargement, exécution en cours, "Tous", pas à
+  // pas). Le triangle ne fait que le cliquer : même comportement, mêmes
+  // garde-fous. Positionné en absolu dans le cadre CodeMirror : il ne change
+  // aucune hauteur (indispensable à l'échange de page sans saut).
+
+  // Exécution réellement en cours (et non simple chargement initial).
+  function executionEnCours() {
+    return !!(boutonExecuter && boutonExecuter.disabled && dejaPret);
+  }
+
+  function executerPageActive() {
+    if (boutonExecuter && !boutonExecuter.disabled) boutonExecuter.click();
+  }
+
+  function creerBoutonLecture(vif) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "sc-run-btn";
+    btn.tabIndex = -1;
+    btn.setAttribute("aria-label", "Exécuter");
+    btn.innerHTML = '<svg viewBox="0 0 10 10" aria-hidden="true" focusable="false">' +
+      '<path d="M2.2 1.2 L9 5 L2.2 8.8 Z"></path></svg>';
+    // mousedown : ni CodeMirror, ni l'activation par clic, ni perte de focus.
+    btn.addEventListener("mousedown", (e) => { e.preventDefault(); e.stopPropagation(); });
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      surClicLecture(btn);
+    });
+    if (vif) majEtatsBoutonsLecture();
+    else majBoutonLectureFac(btn);
+    return btn;
+  }
+
+  function majBoutonLectureFac(btn) {
+    const bloque = executionEnCours();
+    btn.classList.add("etat-inactif");
+    btn.classList.toggle("etat-bloque", bloque);
+    btn.title = bloque
+      ? "Exécution en cours sur la page active…"
+      : "Page inactive : cliquer pour l'activer et l'exécuter";
+  }
+
+  function majEtatsBoutonsLecture() {
+    const occupe = !boutonExecuter || boutonExecuter.disabled;
+    if (boutonExecuter && !boutonExecuter.disabled) dejaPret = true;
+
+    if (boutonLectureVif) {
+      boutonLectureVif.classList.toggle("etat-actif", !occupe);
+      boutonLectureVif.classList.toggle("etat-occupe", occupe);
+      boutonLectureVif.title = !occupe
+        ? "Exécuter ce code (page active) — Maj + Entrée"
+        : window.isDebugMode
+          ? "Débogage pas à pas en cours…"
+          : dejaPret ? "Exécution en cours…" : "Interpréteur en cours de chargement…";
+    }
+    if (rubanEl) rubanEl.querySelectorAll(".sc-fac .sc-run-btn").forEach(majBoutonLectureFac);
+
+    // Fin d'exécution : bascule différée vers la page affichée.
+    if (!occupe && basculeEnAttente) {
+      basculeEnAttente = false;
+      evaluerBascule();
+    }
+  }
+
+  function surClicLecture(btn) {
+    if (btn === boutonLectureVif || btn.closest(".sc-live")) {
+      executerPageActive();
+      return;
+    }
+    const secEl = btn.closest(".sc-section");
+    const j = sections.findIndex((s) => s.el === secEl);
+    if (j < 0 || executionEnCours() || !navAutorisee()) return;
+    activerPage(j, {});
+    // Exécution une fois l'échange affiché (le triangle passe au vert puis au gris).
+    if (indiceLive === j) requestAnimationFrame(() => executerPageActive());
+  }
+
+  function installerBoutonsLecture() {
+    const edit = editeur();
+    boutonExecuter = document.getElementById("runButton");
+    if (!edit || !boutonExecuter) return;
+    const wrapper = edit.getWrapperElement();
+    if (!wrapper) return;
+
+    boutonLectureVif = creerBoutonLecture(true);
+    wrapper.appendChild(boutonLectureVif);
+    majEtatsBoutonsLecture();
+
+    const obs = new MutationObserver(majEtatsBoutonsLecture);
+    obs.observe(boutonExecuter, { attributes: true, attributeFilter: ["disabled"] });
+  }
+
   // ── Initialisation ───────────────────────────────────────────────────────
   function demarrer() {
     zonePython = document.getElementById("zonePython");
@@ -1029,6 +1153,7 @@
     observerIndicateur();
     observerStyleEditeurReel();
     observerDisposition();
+    installerBoutonsLecture();
     construireRuban();
     armerHysteresis();
 
