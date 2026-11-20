@@ -44,6 +44,11 @@
     Exécuter est indisponible (exécution en cours, interpréteur en
     chargement, pas à pas). Pendant une exécution, la page active ne change
     pas au défilement : la bascule se fait quand l'exécution est terminée.
+  - Notebook par cellules (cellules.js) : les fac-similés reçoivent les
+    mêmes "+" et la même barre au-dessus du code que la zone vive (même
+    hauteur) ; le "+" sous le code vif suit la zone vive. Après un
+    changement de structure, le ruban est recomposé sur place
+    (avantStructure / apresStructure), sans saut.
 
   Module autonome : ne fait RIEN si window.SCROLL_CONTINU_ACTIF !== true
   (Dariush Linux ne pose pas ce drapeau et garde scrollFlipPage).
@@ -300,9 +305,29 @@
   // Reprend les classes CSS du vrai système (md-block, exercise-preview,
   // two-cols, output...) pour une hauteur et un rendu identiques.
 
+  // Notebook par cellules (cellules.js) : "+" entre les cellules, barre au-
+  // dessus du code, boutons des markdowns actifs dans les fac-similés.
+  function cellules() {
+    return (window.NOTEBOOK_CELLULES_ACTIF === true && window.NotebookCellules)
+      ? window.NotebookCellules : null;
+  }
+
   function construireBarreOutilsInerte() {
     const toolbar = document.createElement("div");
     toolbar.className = "comment-toolbar md-block-toolbar";
+    if (cellules()) {
+      // Mêmes boutons que la zone vive ; cellules.js les rend cliquables.
+      [["md-btn-cut", "✂"], ["md-btn-up", "↑"], ["md-btn-down", "↓"], ["md-btn-reduce", "—"]]
+        .forEach(([classe, txt]) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = `comment-toggle-btn ${classe}`;
+          btn.tabIndex = -1;
+          btn.textContent = txt;
+          toolbar.appendChild(btn);
+        });
+      return toolbar;
+    }
     toolbar.style.pointerEvents = "none";
     ["+", "✂", "↑", "↓", "—"].forEach((txt) => {
       const btn = document.createElement("button");
@@ -351,7 +376,20 @@
     const zoneMds = document.createElement("div");
     zoneMds.className = "sc-mds";
     mds.forEach((texte) => zoneMds.appendChild(construireBlocMarkdown(texte, page)));
+    const nc = cellules();
+    if (nc) nc.insererSeparateursMd(zoneMds);
     return zoneMds;
+  }
+
+  // Contenu des markdowns d'une page : un fac-similé n'est réutilisé tel
+  // quel après un changement de structure que si cette signature n'a pas
+  // changé.
+  function signatureMds(page) {
+    if (!page) return "";
+    const images = (page.images && typeof page.images === "object")
+      ? Object.keys(page.images).sort().join(",") : "";
+    return JSON.stringify(Array.isArray(page.markdowns) ? page.markdowns : [page.comment || ""]) +
+      "\u0001" + images;
   }
 
   // Clone EXACT du markdown vif (avant qu'on le quitte) : images déjà
@@ -481,6 +519,8 @@
     const editorContainer = document.createElement("div");
     editorContainer.className = "editor-container";
     leftCol.appendChild(editorContainer);
+    const nc = cellules();
+    if (nc) editorContainer.appendChild(nc.creerBarreCode());
 
     const sortieTexte = (gestionnaire && typeof gestionnaire.getPageOutputText === "function")
       ? gestionnaire.getPageOutputText(index) : "";
@@ -569,10 +609,12 @@
       section.split = null;
       section.cm = null;
       section.splitSig = "";
+      section.mdsSig = "";
       return;
     }
 
     section.mds = mdsPrepare || construireMds(page);
+    section.mdsSig = signatureMds(page);
     section.el.appendChild(section.mds);
 
     const sig = signatureSplit(index);
@@ -588,22 +630,32 @@
       if (section.cm) ajusterHauteurFacsimile(section.cm);
     }
 
+    const nc = cellules();
+    if (nc) {
+      if (!section.sepCode) section.sepCode = nc.creerSeparateur("code");
+      section.el.appendChild(section.sepCode);
+      nc.majEtatsFacsimile(section.el, index);
+    }
+
     appliquerTaillesTexte(section.el, styleCourant().fontSize);
     section.el.querySelectorAll(".sc-run-btn").forEach(majBoutonLectureFac);
   }
 
   // ── Transplantation de la zone vive, SUR PLACE ───────────────────────────
+  // sep : "+" sous la zone de code vive (notebook par cellules), qui suit
+  // la zone vive comme les markdowns et le code.
   function widgetsVifs() {
     return {
       mdc: document.getElementById("markdownsContainer"),
-      split: document.getElementById("mainSplit")
+      split: document.getElementById("mainSplit"),
+      sep: document.getElementById("ncSepApresCode")
     };
   }
 
   // Déplace la zone vive dans la section j ; le fac-similé de j est détaché
   // mais gardé en cache ; l'ancienne section vive redevient fac-similé.
   function deplacerLiveVers(j, mdsCloneAncienne) {
-    const { mdc, split } = widgetsVifs();
+    const { mdc, split, sep } = widgetsVifs();
     const gestionnaire = pm();
     if (!mdc || !split || !sections[j] || !gestionnaire) return;
 
@@ -615,6 +667,7 @@
     secJ.el.classList.add("sc-live");
     secJ.el.appendChild(mdc);
     secJ.el.appendChild(split);
+    if (sep) secJ.el.appendChild(sep);
     secJ.pageRef = gestionnaire.getPageRef(j);
 
     indiceLive = j;
@@ -630,9 +683,10 @@
     if (!gestionnaire || !rubanEl) return;
 
     // Mettre la zone vive à l'abri avant de vider le ruban.
-    const { mdc, split } = widgetsVifs();
+    const { mdc, split, sep } = widgetsVifs();
     if (mdc && rubanEl.contains(mdc)) zonePython.insertBefore(mdc, rubanEl);
     if (split && rubanEl.contains(split)) zonePython.insertBefore(split, rubanEl);
+    if (sep && rubanEl.contains(sep)) zonePython.insertBefore(sep, rubanEl);
 
     rubanEl.textContent = "";
     sections = [];
@@ -654,6 +708,7 @@
       secActive.el.classList.add("sc-live");
       if (mdc) secActive.el.appendChild(mdc);
       if (split) secActive.el.appendChild(split);
+      if (sep) secActive.el.appendChild(sep);
       secActive.pageRef = gestionnaire.getPageRef(actif);
     }
 
@@ -683,12 +738,15 @@
     basculeEnAttente = false;
     majEcouteMoletteCtrl(false);
 
-    const { mdc, split } = widgetsVifs();
+    const { mdc, split, sep } = widgetsVifs();
     if (mdc && ancreMdc && ancreMdc.parentNode) {
       ancreMdc.parentNode.insertBefore(mdc, ancreMdc.nextSibling);
     }
     if (split && ancreSplit && ancreSplit.parentNode) {
       ancreSplit.parentNode.insertBefore(split, ancreSplit.nextSibling);
+    }
+    if (sep && split && split.parentNode) {
+      split.parentNode.insertBefore(sep, split.nextSibling);
     }
 
     rubanEl.textContent = "";
@@ -949,6 +1007,14 @@
       if (lecture === boutonLectureVif) { clearTimeout(settleTimer); settleTimer = null; }
       return;
     }
+    // Boutons de structure (cellules.js) : même principe que le triangle —
+    // dans la page active, ils agissent sur elle ; ailleurs, sur leur page.
+    // Le menu du "+" et la fenêtre du ✂ ne déclenchent rien.
+    const structure = cible ? cible.closest(".nc-ctrl, .nc-menu, .nc-dialog-fond") : null;
+    if (structure) {
+      if (structure.closest(".sc-live")) { clearTimeout(settleTimer); settleTimer = null; }
+      return;
+    }
     const dansFac = cible ? cible.closest(".sc-section.sc-fac") : null;
     if (dansFac) return;
     clearTimeout(settleTimer);
@@ -962,7 +1028,9 @@
     const j = sections.findIndex((s) => s.el === secEl);
     if (j < 0 || j === indiceLive) return;
     if (!rubanEngage) return;
-    if (e.target.closest("a, .aide-btn, .sc-run-btn")) return;
+    // .nc-ctrl : "+" et boutons de structure (cellules.js), qui agissent
+    // sur leur page sans l'activer d'abord.
+    if (e.target.closest("a, .aide-btn, .sc-run-btn, .nc-ctrl")) return;
     if (executionEnCours()) return;
     e.preventDefault();
 
@@ -1026,6 +1094,121 @@
       if (Math.abs(d) >= 1) poserScroll(zonePython.scrollTop + d);
       armerHysteresis();
     });
+  }
+
+  // ── Changement de structure (notebook par cellules, cellules.js) ─────────
+  // pagesmultiples.js appelle avantStructure() avant de modifier les pages
+  // (photo de la zone vive), puis apresStructure() une fois la page voulue
+  // chargée dans la zone vive. Le ruban est recomposé SUR PLACE :
+  // - la section vive ne quitte jamais le document (focus et saisie
+  //   préservés) ; les autres sections se rangent avant / après elle ;
+  // - un fac-similé dont la page n'a pas changé est réutilisé tel quel
+  //   (images déjà décodées : même hauteur) ;
+  // - la page qui vient de quitter la zone vive reprend le clone exact de
+  //   son rendu si ses markdowns n'ont pas changé ;
+  // - le défilement reste où il était.
+  let photoAvantStructure = null;
+
+  function avantStructure() {
+    photoAvantStructure = null;
+    if (!rubanEngage || !sections.length || !zonePython) return;
+    const live = sections[indiceLive];
+    const page = live ? live.pageRef : null;
+    photoAvantStructure = {
+      scroll: zonePython.scrollTop,
+      pageRef: page,
+      mdsSig: signatureMds(page),
+      clone: page ? clonerMarkdownsVifs(page) : null
+    };
+  }
+
+  function apresStructure() {
+    const photo = photoAvantStructure;
+    photoAvantStructure = null;
+    if (!rubanEngage || !rubanEl) return;
+    const gestionnaire = pm();
+    if (!gestionnaire) return;
+
+    const liveSection = sections[indiceLive];
+    if (!photo || !liveSection || !rubanEl.contains(liveSection.el)) {
+      construireRuban();
+      return;
+    }
+
+    if (settleTimer) { clearTimeout(settleTimer); settleTimer = null; }
+    suspendreAncrageNavigateur();
+
+    // Fac-similés existants, retrouvés par objet page.
+    const reserve = new Map();
+    sections.forEach((s, i) => {
+      if (i !== indiceLive && s.pageRef) reserve.set(s.pageRef, s);
+    });
+
+    const liveEl = liveSection.el;
+    sections.forEach((s, i) => {
+      if (i !== indiceLive && s.el.parentNode) s.el.remove();
+    });
+
+    const total = gestionnaire.getPagesCount();
+    const actif = gestionnaire.getActivePageIndex();
+    const nouvelles = [];
+    const aRemplir = [];
+
+    for (let i = 0; i < total; i++) {
+      const page = gestionnaire.getPageRef(i);
+      let s;
+      if (i === actif) {
+        s = liveSection;
+        if (s.pageRef !== page) {
+          // Le cache de fac-similé de cette section était celui d'une autre page.
+          s.mds = null;
+          s.split = null;
+          s.cm = null;
+          s.splitSig = "";
+          s.mdsSig = "";
+        }
+        s.pageRef = page;
+      } else if (reserve.has(page)) {
+        s = reserve.get(page);
+        reserve.delete(page);
+        if (s.mdsSig !== signatureMds(page)) aRemplir.push([s, i, null]);
+      } else {
+        const el = document.createElement("div");
+        el.className = "sc-section sc-fac";
+        s = { el, pageRef: null, mds: null, split: null, cm: null, splitSig: "", mdsSig: "" };
+        const clone = (page === photo.pageRef && photo.clone &&
+          signatureMds(page) === photo.mdsSig) ? photo.clone : null;
+        aRemplir.push([s, i, clone]);
+      }
+      s.el.dataset.scIndex = String(i);
+      nouvelles.push(s);
+    }
+
+    for (let i = 0; i < actif; i++) rubanEl.insertBefore(nouvelles[i].el, liveEl);
+    for (let i = actif + 1; i < total; i++) rubanEl.appendChild(nouvelles[i].el);
+
+    sections = nouvelles;
+    indiceLive = actif;
+
+    // Remplissage une fois les sections dans le document (mesures justes).
+    aRemplir.forEach(([s, i, clone]) => remplirFacsimile(s, i, clone));
+
+    // Les états des boutons dépendent des pages voisines et du nombre de pages.
+    const nc = cellules();
+    if (nc) {
+      sections.forEach((s, i) => { if (i !== indiceLive) nc.majEtatsFacsimile(s.el, i); });
+    }
+
+    const edit = editeur();
+    if (edit) edit.refresh();
+    if (Math.abs(zonePython.scrollTop - photo.scroll) >= 1) poserScroll(photo.scroll);
+    armerHysteresis();
+    retablirAncrageNavigateur();
+    log("structure recomposée :", total, "sections, page active", actif + 1);
+  }
+
+  function indexSection(el) {
+    return sections.findIndex((s) => s.el === el);
   }
 
   function observerIndicateur() {
@@ -1217,6 +1400,9 @@
     observerStyleEditeurReel();
     observerDisposition();
     installerBoutonsLecture();
+
+    // Pour pagesmultiples.js (changements de structure) et cellules.js.
+    window.ScrollContinu = { avantStructure, apresStructure, indexSection };
 
     // En service sauf en travail de groupe / aide ; on surveille ensuite
     // l'entrée et la sortie de ces modes.

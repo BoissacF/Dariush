@@ -3481,3 +3481,298 @@ body.markdowns-multiples-actifs .comment-toolbar:has(+ #fenetrescommentaires) {
   white-space: pre;
   overflow-x: auto;
 }
+
+/* =========================================
+   NOTEBOOK PAR CELLULES (cellules.js) — Python et SQL
+   "+" entre les cellules, barre au-dessus de chaque zone de code, menu du
+   "+", fenêtre du ✂. Les mêmes éléments sont posés dans la zone vive et
+   dans les fac-similés du ruban : hauteurs identiques (pas de saut).
+========================================= */
+
+/* "+" entre deux cellules : discret, net au survol. */
+.nc-sep {
+  position: relative;
+  flex: 0 0 auto;
+  height: 14px;
+}
+
+.nc-sep::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  border-top: 1px dashed transparent;
+  transition: border-color 0.15s ease;
+}
+
+.nc-sep:hover::before {
+  border-top-color: #9fb3c8;
+}
+
+.nc-sep-btn {
+  all: unset;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+  box-sizing: border-box;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #c5ccd6;
+  border-radius: 50%;
+  background: #fff;
+  color: #5b6b7f;
+  font: 600 14px/1 system-ui, -apple-system, "Segoe UI", sans-serif;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.nc-sep:hover .nc-sep-btn {
+  opacity: 1;
+}
+
+/* Plus précis que button:hover / button:active (style global). */
+.nc-sep .nc-sep-btn:hover {
+  background: #fff;
+  color: #2f6feb;
+  border-color: #2f6feb;
+}
+
+.nc-sep .nc-sep-btn:active {
+  transform: translate(-50%, -50%);
+}
+
+/* Le dernier "+" (ajouter une page) doit pouvoir remonter au-dessus de la
+   barre flottante Prec / Suiv, centrée en bas comme lui. Espace ajouté
+   APRÈS le ruban (ou sous la zone de code hors notebook continu) : les
+   sections gardent leur hauteur. */
+body.notebook-cellules #scRuban {
+  padding-bottom: 56px;
+}
+
+body.notebook-cellules #zonePython > #ncSepApresCode {
+  margin-bottom: 56px;
+}
+
+/* Barre au-dessus de la zone de code : même bandeau que les markdowns. */
+.code-block-toolbar {
+  flex: 0 0 auto;
+}
+
+.code-block-toolbar + .CodeMirror {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+/* Bouton grisé : il garde son infobulle (la raison), on ne coupe donc
+   pas la souris. */
+.code-block-toolbar .comment-toggle-btn.is-disabled,
+body.notebook-cellules .md-block-toolbar .comment-toggle-btn.is-disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: auto;
+}
+
+/* Fac-similés : ces boutons-là sont actifs (le reste de la barre ne capte
+   toujours pas la souris : le clic active la page). */
+body.notebook-cellules .sc-fac .md-block-toolbar .nc-ctrl,
+body.notebook-cellules .sc-fac .code-block-toolbar .nc-ctrl {
+  pointer-events: auto;
+}
+
+/* Élève en travail de groupe / aide : structure réservée au professeur. */
+body.nc-verrou .nc-sep,
+body.nc-verrou .code-block-toolbar {
+  display: none !important;
+}
+
+/* Menu du "+" */
+.nc-menu {
+  position: fixed;
+  z-index: 10050;
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  max-width: 300px;
+  padding: 4px;
+  background: #fff;
+  border: 1px solid #d4d9df;
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+}
+
+.nc-menu .nc-menu-choix {
+  all: unset;
+  display: block;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font: 13px/1.3 system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: #1f2933;
+  cursor: pointer;
+}
+
+.nc-menu .nc-menu-choix:hover {
+  background: #eef3fb;
+}
+
+.nc-menu .nc-menu-choix.is-disabled,
+.nc-menu .nc-menu-choix.is-disabled:hover {
+  color: #9aa5b1;
+  background: transparent;
+  cursor: not-allowed;
+}
+
+.nc-menu-note {
+  padding: 0 10px 6px;
+  font: 11px/1.35 system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: #7b8794;
+}
+
+/* Fenêtre du ✂ d'une zone de code */
+.nc-dialog-fond {
+  position: fixed;
+  inset: 0;
+  z-index: 10060;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.35);
+}
+
+.nc-dialog {
+  width: 100%;
+  max-width: 480px;
+  box-sizing: border-box;
+  padding: 18px 20px;
+  background: #fff;
+  color: #1f2933;
+  border-radius: 8px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.nc-dialog-titre {
+  margin-bottom: 8px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.nc-dialog-question {
+  margin: 0 0 12px;
+}
+
+.nc-dialog-choix {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 0;
+  cursor: pointer;
+}
+
+.nc-dialog-choix input {
+  margin-top: 3px;
+  flex: 0 0 auto;
+}
+
+.nc-dialog-choix.is-disabled {
+  color: #9aa5b1;
+  cursor: not-allowed;
+}
+
+.nc-dialog-note {
+  margin: -2px 0 6px 24px;
+  font-size: 12px;
+  color: #7b8794;
+}
+
+.nc-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.nc-dialog .nc-dialog-btn {
+  align-self: auto;
+  background: #e5e7eb;
+  color: #1f2933;
+  border: 1px solid #c5ccd6;
+}
+
+.nc-dialog .nc-dialog-btn:hover {
+  background: #dcdfe4;
+}
+
+.nc-dialog .nc-dialog-btn-danger {
+  background: #c0392b;
+  color: #fff;
+  border-color: #a93226;
+}
+
+.nc-dialog .nc-dialog-btn-danger:hover {
+  background: #a93226;
+}
+
+.nc-dialog .nc-dialog-btn-danger:disabled,
+.nc-dialog .nc-dialog-btn-danger:disabled:hover {
+  background: #c0392b;
+  opacity: 0.45;
+}
+
+/* Thème sombre */
+body.dariush-dark .nc-sep:hover::before {
+  border-top-color: #66707a;
+}
+
+body.dariush-dark .nc-sep-btn,
+body.dariush-dark .nc-sep .nc-sep-btn:hover {
+  background: var(--dk-bg-panel);
+  border-color: var(--dk-border);
+  color: var(--dk-text-muted);
+}
+
+body.dariush-dark .nc-sep .nc-sep-btn:hover {
+  color: #8ab4f8;
+  border-color: #8ab4f8;
+}
+
+body.dariush-dark .nc-menu,
+body.dariush-dark .nc-dialog {
+  background: var(--dk-bg-panel);
+  border-color: var(--dk-border);
+  color: var(--dk-text);
+}
+
+body.dariush-dark .nc-menu .nc-menu-choix {
+  color: var(--dk-text);
+}
+
+body.dariush-dark .nc-menu .nc-menu-choix:hover {
+  background: var(--dk-bg-soft);
+}
+
+body.dariush-dark .nc-menu .nc-menu-choix.is-disabled,
+body.dariush-dark .nc-dialog-choix.is-disabled,
+body.dariush-dark .nc-menu-note,
+body.dariush-dark .nc-dialog-note {
+  color: var(--dk-text-muted);
+}
+
+body.dariush-dark .nc-dialog .nc-dialog-btn {
+  background: var(--dk-bg-soft);
+  color: var(--dk-text);
+  border-color: var(--dk-border);
+}
+
+body.dariush-dark .nc-dialog .nc-dialog-btn-danger {
+  background: #c0392b;
+  color: #fff;
+  border-color: #a93226;
+}

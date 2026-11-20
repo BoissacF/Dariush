@@ -12,8 +12,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/theme/monokai.min.css">
 
   <!-- CSS principal (commun) -->
-  <link rel="stylesheet" type="text/css" href="../Dariush_Commun/version3/style.css?v=624513">
-  <link rel="stylesheet" type="text/css" href="cssjs_sql/style_sql.css?v=624513">
+  <link rel="stylesheet" type="text/css" href="../Dariush_Commun/version3/style.css?v=624514">
+  <link rel="stylesheet" type="text/css" href="cssjs_sql/style_sql.css?v=624514">
 
   <!-- pako -->
   <script defer src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
@@ -34,8 +34,8 @@
        CONNEXION GROUPE ET AIDE — COMMUN
        WebSocket (nécessite le serveur Node, Dariush-node/server.js)
   ══════════════════════════════════════ -->
-  <script type="module" src="../Dariush_Commun/version3/SOCKET_connexion.js?v=624513"></script>
-  <script defer src="../Dariush_Commun/version3/SOCKET_connexion_aide.js?v=624513"></script>
+  <script type="module" src="../Dariush_Commun/version3/SOCKET_connexion.js?v=624514"></script>
+  <script defer src="../Dariush_Commun/version3/SOCKET_connexion_aide.js?v=624514"></script>
 
   <!-- SCRIPTS COMMUNS -->
    <script>
@@ -43,6 +43,10 @@
   // Ruban de pages : défilement continu façon notebook (scrollContinu.js).
   // Mettre à false pour revenir à la bascule de page en butée (scrollFlipPage).
   window.SCROLL_CONTINU_ACTIF = true;
+  // Notebook par cellules (cellules.js) : "+" entre les cellules, barre
+  // au-dessus de chaque zone de code. Mettre à false pour revenir aux
+  // boutons + et ✂ de page.
+  window.NOTEBOOK_CELLULES_ACTIF = true;
   document.addEventListener("DOMContentLoaded", function () {
     if (window.MARKDOWNS_MULTIPLES_ACTIFS) {
       document.body.classList.add("markdowns-multiples-actifs");
@@ -50,28 +54,29 @@
   });
 </script>
 
-  <script defer src="../Dariush_Commun/version3/importer_pdf.js?v=624513"></script>
-  <script defer src="../Dariush_Commun/version3/aide_toggle.js?v=624513"></script>
-  <script defer src="../Dariush_Commun/version3/gestionMenu.js?v=624513"></script>
-  <script defer src="../Dariush_Commun/version3/plein_ecran.js?v=624513"></script>
-  <script defer src="../Dariush_Commun/version3/raccourci_executer.js?v=624513"></script>
-  <script defer src="../Dariush_Commun/version3/sauvegarde.js?v=624513"></script>
-  <script defer src="../Dariush_Commun/version3/importer.js?v=624513"></script>
-  <script defer src="../Dariush_Commun/version3/pagesmultiples.js?v=624513"></script>
-  <script defer src="../Dariush_Commun/version3/scrollContinu.js?v=624513"></script>
-  <script defer src="../Dariush_Commun/version3/scrollFlipPage.js?v=624513"></script>
-  <script defer src="../Dariush_Commun/version3/pageScrollbar.js?v=624513"></script>
-  <script defer src="../Dariush_Commun/fichiersannexes/markdown-it.min.js?v=624513"></script>
-  <script defer src="../Dariush_Commun/version3/markdown.js?v=624513"></script>
-  <script defer src="../Dariush_Commun/version3/googleDrive.js?v=624513"></script>
-  <script defer src="../Dariush_Commun/version3/outils.js?v=624513"></script>
-  <script defer src="../Dariush_Commun/version3/IA.js?v=624513"></script>
-  <script defer src="../Dariush_Commun/version3/agent_aide.js?v=624513"></script>
-  <script defer src="../Dariush_Commun/version3/gestionimages.js?v=624513"></script>
+  <script defer src="../Dariush_Commun/version3/importer_pdf.js?v=624514"></script>
+  <script defer src="../Dariush_Commun/version3/aide_toggle.js?v=624514"></script>
+  <script defer src="../Dariush_Commun/version3/gestionMenu.js?v=624514"></script>
+  <script defer src="../Dariush_Commun/version3/plein_ecran.js?v=624514"></script>
+  <script defer src="../Dariush_Commun/version3/raccourci_executer.js?v=624514"></script>
+  <script defer src="../Dariush_Commun/version3/sauvegarde.js?v=624514"></script>
+  <script defer src="../Dariush_Commun/version3/importer.js?v=624514"></script>
+  <script defer src="../Dariush_Commun/version3/pagesmultiples.js?v=624514"></script>
+  <script defer src="../Dariush_Commun/version3/scrollContinu.js?v=624514"></script>
+  <script defer src="../Dariush_Commun/version3/cellules.js?v=624514"></script>
+  <script defer src="../Dariush_Commun/version3/scrollFlipPage.js?v=624514"></script>
+  <script defer src="../Dariush_Commun/version3/pageScrollbar.js?v=624514"></script>
+  <script defer src="../Dariush_Commun/fichiersannexes/markdown-it.min.js?v=624514"></script>
+  <script defer src="../Dariush_Commun/version3/markdown.js?v=624514"></script>
+  <script defer src="../Dariush_Commun/version3/googleDrive.js?v=624514"></script>
+  <script defer src="../Dariush_Commun/version3/outils.js?v=624514"></script>
+  <script defer src="../Dariush_Commun/version3/IA.js?v=624514"></script>
+  <script defer src="../Dariush_Commun/version3/agent_aide.js?v=624514"></script>
+  <script defer src="../Dariush_Commun/version3/gestionimages.js?v=624514"></script>
   <script defer src="../Dariush_Commun/version3/graphPanel.js?v=8860"></script>
 
   <!-- SCRIPTS SPÉCIFIQUES SQL -->
-  <script defer src="cssjs_sql/sqlInterpreteur.js?v=624513"></script>
+  <script defer src="cssjs_sql/sqlInterpreteur.js?v=624514"></script>
 
 </head>
 
@@ -474,12 +479,13 @@
         </button>
       </div>
 
-      <div class="toolbar-group">
+      <!-- Pages : plus de + ni de ✂ ici (notebook par cellules : on ajoute et
+           on coupe directement les cellules). Le groupe reste dans la page,
+           masqué : l'indicateur et les flèches servent aux scripts. -->
+      <div class="toolbar-group" style="display:none;">
         <button id="pagesPrevButton" class="icon-btn" type="button" title="Page précédente" style="display:none;">⬅</button>
         <span id="pagesMultiplesIndicator" class="page-indicator" title="Page actuelle / nombre total de pages" style="display:none;">1/1</span>
         <button id="pagesNextButton" class="icon-btn" type="button" title="Page suivante" style="display:none;">➡</button>
-        <button id="pagesAddButton" class="icon-btn" type="button" title="Ajouter une page vide juste après la page active&#10;(une page = un ou plusieurs markdowns + une zone de code)">➕</button>
-        <button id="pagesRemoveButton" class="icon-btn" type="button" title="Supprimer la page active&#10;(tous ses markdowns et sa zone de code)">✂</button>
       </div>
 
       <div class="toolbar-group toolbar-group-run">

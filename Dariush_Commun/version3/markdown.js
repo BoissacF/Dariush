@@ -460,12 +460,16 @@ function syncCssTextarea() {
     const toolbar = document.createElement("div");
     toolbar.className = "comment-toolbar md-block-toolbar";
 
-    const addBtn = document.createElement("button");
-    addBtn.type = "button";
-    addBtn.className = "comment-toggle-btn md-btn-add";
-    addBtn.title = "Ajouter un markdown en dessous";
-    addBtn.textContent = "+";
-    toolbar.appendChild(addBtn);
+    // Notebook par cellules (cellules.js) : on ajoute avec les "+" placés
+    // entre les cellules, plus avec la barre.
+    if (window.NOTEBOOK_CELLULES_ACTIF !== true) {
+      const addBtn = document.createElement("button");
+      addBtn.type = "button";
+      addBtn.className = "comment-toggle-btn md-btn-add";
+      addBtn.title = "Ajouter un markdown en dessous";
+      addBtn.textContent = "+";
+      toolbar.appendChild(addBtn);
+    }
 
     const cutBtn = document.createElement("button");
     cutBtn.type = "button";
@@ -996,6 +1000,14 @@ function renderMermaidBlocks(root) {
     // Présente en Python et SQL ; absente en Linux (pas de zoom) → typeof protège.
     if (typeof window.reapplyMarkdownFontSize === "function") {
       window.reapplyMarkdownFontSize();
+    }
+
+    // Notebook par cellules : "+" entre les blocs, état des boutons.
+    if (
+      window.NotebookCellules &&
+      typeof window.NotebookCellules.apresRenduMarkdowns === "function"
+    ) {
+      window.NotebookCellules.apresRenduMarkdowns(container);
     }
   }
 // Lit le contenu de TOUS les blocs du conteneur, dans l'ordre du DOM.
