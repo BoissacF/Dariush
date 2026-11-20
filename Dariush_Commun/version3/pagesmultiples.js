@@ -655,10 +655,12 @@ function removeCurrentPage() {
     return verdict(true);
   }
 
-  // apres : index du markdown sous lequel on insère, ou "code".
+  // apres : index du markdown sous lequel on insère, "code" (sous la zone
+  // de code) ou "debut" (tout en haut du document, page 0).
   function peutInsererCode(p, apres) {
     const page = pagesState.pages[p];
     if (!page) return verdict(false, "");
+    if (apres === "debut") return verdict(false, "Impossible : le document commence toujours par un markdown");
     if (apres === "code") return verdict(false, `Impossible : ${DEUX_CODES}`);
     const j = parseInt(apres, 10);
     if (Number.isFinite(j) && j >= 0 && j < mdsDe(page).length - 1) return verdict(true);
@@ -817,12 +819,23 @@ function removeCurrentPage() {
   // ── Opérations ───────────────────────────────────────────────────────────
   // p : index de la page ; j : index du markdown dans la page.
 
-  // "+" sous une cellule. apres : index du markdown, ou "code".
+  // "+" sous une cellule. apres : index du markdown, "code", ou "debut"
+  // (tout en haut du document : un markdown seulement).
   // type : "markdown" ou "code".
   function insererCelluleApres(p, apres, type) {
     if (!cellulesActives()) return false;
     const pages = pagesState.pages;
     if (!pages[p]) return false;
+
+    if (apres === "debut") {
+      if (p !== 0 || type !== "markdown") return false;
+      const avant = debutStructure();
+      const premiere = pages[0];
+      mdsDe(premiere).unshift("");
+      resynchroniser(premiere);
+      finStructure(avant, premiere, { focusMd: 0 });
+      return true;
+    }
 
     if (apres === "code") {
       if (type === "code") return false;

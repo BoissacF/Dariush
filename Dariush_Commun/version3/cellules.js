@@ -7,7 +7,9 @@
   ou plusieurs markdowns puis UNE zone de code. À l'écran, on manipule les
   cellules une par une, comme dans un notebook :
   - un "+" bien visible entre deux cellules : petite fenêtre "Voulez-vous
-    ajouter ici : un markdown / une zone de code".
+    ajouter ici : un markdown / une zone de code". Un "+" aussi tout en
+    haut du document (un markdown seulement : le document commence
+    toujours par un markdown).
     Une zone de code ne peut pas suivre une zone de code : le choix est
     alors grisé, avec la raison. Sous la dernière zone de code, le "+"
     ajoute directement une page (un markdown + une zone de code) ;
@@ -48,7 +50,8 @@
   }
 
   // ── Éléments ─────────────────────────────────────────────────────────────
-  // apres : "md" (sous un markdown) ou "code" (sous la zone de code).
+  // apres : "md" (sous un markdown), "code" (sous la zone de code) ou
+  // "debut" (tout en haut du document).
   function creerSeparateur(apres) {
     const sep = document.createElement("div");
     sep.className = "nc-sep";
@@ -100,9 +103,22 @@
     btn.title = verdict.ok ? titreSiOk : verdict.raison;
   }
 
+  // "+" tout en haut du document : au-dessus du premier markdown de la
+  // page 1 seulement (zone vive comme fac-similé : même hauteur).
+  function majSepDebut(conteneur, p) {
+    const existant = conteneur.querySelector(':scope > .nc-sep[data-apres="debut"]');
+    if (p === 0) {
+      const premier = conteneur.querySelector(":scope > .md-block");
+      if (!existant && premier) conteneur.insertBefore(creerSeparateur("debut"), premier);
+    } else if (existant) {
+      existant.remove();
+    }
+  }
+
   function majEtatsMarkdowns(conteneur, p, vive) {
     const r = regles();
     if (!conteneur || !r) return;
+    majSepDebut(conteneur, p);
     conteneur.querySelectorAll(".md-block").forEach((bloc, j) => {
       const coupe = bloc.querySelector(".md-btn-cut");
       const haut = bloc.querySelector(".md-btn-up");
@@ -120,6 +136,10 @@
     conteneur.querySelectorAll(".nc-sep").forEach((sep) => {
       const btn = sep.querySelector(".nc-sep-btn");
       if (!btn) return;
+      if (sep.dataset.apres === "debut") {
+        btn.title = "Ajouter un markdown tout en haut du document";
+        return;
+      }
       const j = indexMarkdownAvant(sep);
       btn.title = j === dernier
         ? "Ajouter un markdown ici (une zone de code suit déjà ce markdown)"
@@ -480,6 +500,10 @@
 
     if (btn.classList.contains("nc-sep-btn")) {
       const sep = btn.closest(".nc-sep");
+      if (sep.dataset.apres === "debut") {
+        ouvrirMenu(btn, p, "debut");
+        return;
+      }
       if (sep.dataset.apres === "code") {
         if (p === gestionnaire.getPagesCount() - 1) {
           r.insererApres(p, "code", "markdown");
