@@ -3489,11 +3489,12 @@ body.markdowns-multiples-actifs .comment-toolbar:has(+ #fenetrescommentaires) {
    dans les fac-similés du ruban : hauteurs identiques (pas de saut).
 ========================================= */
 
-/* "+" entre deux cellules : discret, net au survol. */
+/* "+" entre deux cellules : toujours visible, bien repérable (rond bleu
+   sur un trait qui sépare les cellules), plein au survol. */
 .nc-sep {
   position: relative;
   flex: 0 0 auto;
-  height: 14px;
+  height: 32px;
 }
 
 .nc-sep::before {
@@ -3502,12 +3503,12 @@ body.markdowns-multiples-actifs .comment-toolbar:has(+ #fenetrescommentaires) {
   left: 0;
   right: 0;
   top: 50%;
-  border-top: 1px dashed transparent;
+  border-top: 1px solid #c9d6e8;
   transition: border-color 0.15s ease;
 }
 
 .nc-sep:hover::before {
-  border-top-color: #9fb3c8;
+  border-top-color: #2f6feb;
 }
 
 .nc-sep-btn {
@@ -3518,30 +3519,27 @@ body.markdowns-multiples-actifs .comment-toolbar:has(+ #fenetrescommentaires) {
   z-index: 2;
   transform: translate(-50%, -50%);
   box-sizing: border-box;
-  width: 18px;
-  height: 18px;
+  width: 26px;
+  height: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #c5ccd6;
+  border: 2px solid #2f6feb;
   border-radius: 50%;
   background: #fff;
-  color: #5b6b7f;
-  font: 600 14px/1 system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: #2f6feb;
+  font: 700 20px/1 system-ui, -apple-system, "Segoe UI", sans-serif;
   cursor: pointer;
-  opacity: 0.5;
-  transition: opacity 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-}
-
-.nc-sep:hover .nc-sep-btn {
-  opacity: 1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 
 /* Plus précis que button:hover / button:active (style global). */
 .nc-sep .nc-sep-btn:hover {
-  background: #fff;
-  color: #2f6feb;
+  background: #2f6feb;
+  color: #fff;
   border-color: #2f6feb;
+  box-shadow: 0 2px 6px rgba(47, 111, 235, 0.45);
 }
 
 .nc-sep .nc-sep-btn:active {
@@ -3592,44 +3590,59 @@ body.nc-verrou .code-block-toolbar {
   display: none !important;
 }
 
-/* Menu du "+" */
+/* Petite fenêtre du "+" : "Voulez-vous ajouter ici :" et deux choix. */
 .nc-menu {
   position: fixed;
   z-index: 10050;
   display: flex;
   flex-direction: column;
-  min-width: 200px;
-  max-width: 300px;
-  padding: 4px;
+  gap: 6px;
+  min-width: 240px;
+  max-width: 320px;
+  padding: 10px 12px 12px;
   background: #fff;
-  border: 1px solid #d4d9df;
-  border-radius: 6px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+  border: 1px solid #c9d6e8;
+  border-radius: 8px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
+  font: 13px/1.35 system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: #1f2933;
+}
+
+.nc-menu-question {
+  margin-bottom: 2px;
+  font-weight: 700;
+  font-size: 14px;
 }
 
 .nc-menu .nc-menu-choix {
   all: unset;
   display: block;
-  padding: 6px 10px;
-  border-radius: 4px;
-  font: 13px/1.3 system-ui, -apple-system, "Segoe UI", sans-serif;
-  color: #1f2933;
+  padding: 8px 12px;
+  border: 1px solid #b9cbea;
+  border-radius: 6px;
+  background: #f3f7fe;
+  font: 600 13px/1.3 system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: #1f4fbf;
   cursor: pointer;
 }
 
 .nc-menu .nc-menu-choix:hover {
-  background: #eef3fb;
+  background: #2f6feb;
+  border-color: #2f6feb;
+  color: #fff;
 }
 
 .nc-menu .nc-menu-choix.is-disabled,
 .nc-menu .nc-menu-choix.is-disabled:hover {
+  border-color: #dde3ea;
+  background: #f6f7f9;
   color: #9aa5b1;
-  background: transparent;
   cursor: not-allowed;
 }
 
 .nc-menu-note {
-  padding: 0 10px 6px;
+  margin-top: -2px;
+  padding: 0 2px;
   font: 11px/1.35 system-ui, -apple-system, "Segoe UI", sans-serif;
   color: #7b8794;
 }
@@ -3727,20 +3740,41 @@ body.nc-verrou .code-block-toolbar {
 }
 
 /* Thème sombre */
+body.dariush-dark .nc-sep::before {
+  border-top-color: #4a5563;
+}
+
 body.dariush-dark .nc-sep:hover::before {
-  border-top-color: #66707a;
+  border-top-color: #8ab4f8;
 }
 
-body.dariush-dark .nc-sep-btn,
-body.dariush-dark .nc-sep .nc-sep-btn:hover {
+body.dariush-dark .nc-sep-btn {
   background: var(--dk-bg-panel);
-  border-color: var(--dk-border);
-  color: var(--dk-text-muted);
+  border-color: #8ab4f8;
+  color: #8ab4f8;
 }
 
 body.dariush-dark .nc-sep .nc-sep-btn:hover {
-  color: #8ab4f8;
+  background: #8ab4f8;
   border-color: #8ab4f8;
+  color: #1e1f1c;
+}
+
+body.dariush-dark .nc-menu .nc-menu-choix:not(.is-disabled) {
+  background: var(--dk-bg-soft);
+  border-color: #5a6b85;
+  color: #8ab4f8;
+}
+
+body.dariush-dark .nc-menu .nc-menu-choix:not(.is-disabled):hover {
+  background: #8ab4f8;
+  border-color: #8ab4f8;
+  color: #1e1f1c;
+}
+
+body.dariush-dark .nc-menu .nc-menu-choix.is-disabled {
+  background: transparent;
+  border-color: var(--dk-border);
 }
 
 body.dariush-dark .nc-menu,
@@ -3748,14 +3782,6 @@ body.dariush-dark .nc-dialog {
   background: var(--dk-bg-panel);
   border-color: var(--dk-border);
   color: var(--dk-text);
-}
-
-body.dariush-dark .nc-menu .nc-menu-choix {
-  color: var(--dk-text);
-}
-
-body.dariush-dark .nc-menu .nc-menu-choix:hover {
-  background: var(--dk-bg-soft);
 }
 
 body.dariush-dark .nc-menu .nc-menu-choix.is-disabled,

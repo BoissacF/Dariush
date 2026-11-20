@@ -6,7 +6,8 @@
   Les pages restent le modèle interne (pagesmultiples.js) : une page = un
   ou plusieurs markdowns puis UNE zone de code. À l'écran, on manipule les
   cellules une par une, comme dans un notebook :
-  - un "+" entre deux cellules : petit menu "markdown / zone de code".
+  - un "+" bien visible entre deux cellules : petite fenêtre "Voulez-vous
+    ajouter ici : un markdown / une zone de code".
     Une zone de code ne peut pas suivre une zone de code : le choix est
     alors grisé, avec la raison. Sous la dernière zone de code, le "+"
     ajoute directement une page (un markdown + une zone de code) ;
@@ -308,9 +309,13 @@
     const menu = document.createElement("div");
     menu.className = "nc-menu";
     menu.setAttribute("role", "menu");
-    ajouterChoix(menu, "Ajouter un markdown", { ok: true, raison: "" },
+    const question = document.createElement("div");
+    question.className = "nc-menu-question";
+    question.textContent = "Voulez-vous ajouter ici :";
+    menu.appendChild(question);
+    ajouterChoix(menu, "Un markdown", { ok: true, raison: "" },
       () => r.insererApres(p, apres, "markdown"));
-    ajouterChoix(menu, "Ajouter une zone de code", r.peutInsererCode(p, apres),
+    ajouterChoix(menu, "Une zone de code", r.peutInsererCode(p, apres),
       () => r.insererApres(p, apres, "code"));
     document.body.appendChild(menu);
 
