@@ -3563,6 +3563,70 @@ body.notebook-cellules #zonePython > #ncSepApresCode {
   flex: 0 0 auto;
 }
 
+/* Barres des markdowns et des zones de code (✂ ↑ ↓ —) : boutons plus
+   grands et plus contrastés. Mêmes règles dans la zone vive et dans les
+   fac-similés du ruban : hauteurs identiques. */
+body.notebook-cellules .md-block-toolbar,
+body.notebook-cellules .code-block-toolbar {
+  height: 30px;
+  gap: 4px;
+  padding: 0 6px;
+}
+
+body.notebook-cellules .md-block-toolbar .comment-toggle-btn,
+body.notebook-cellules .code-block-toolbar .comment-toggle-btn {
+  box-sizing: border-box;
+  width: 28px;
+  height: 23px;
+  border: 1px solid #a9b4c2;
+  border-radius: 4px;
+  background: #fff;
+  color: #2d3748;
+  font: 600 15px/1 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+body.notebook-cellules .md-block-toolbar .comment-toggle-btn:hover,
+body.notebook-cellules .code-block-toolbar .comment-toggle-btn:hover {
+  background: #e8f0fe;
+  border-color: #2f6feb;
+  color: #2f6feb;
+}
+
+/* Flèches : le caractère ↑ ↓ est trop fin (trait d'un pixel, mal lissé).
+   On le masque et on dessine une flèche pleine, de la couleur du bouton
+   (survol, grisé et thème sombre suivent donc tout seuls). */
+body.notebook-cellules .md-block-toolbar .md-btn-up,
+body.notebook-cellules .md-block-toolbar .md-btn-down,
+body.notebook-cellules .code-block-toolbar .nc-code-up,
+body.notebook-cellules .code-block-toolbar .nc-code-down {
+  font-size: 0;
+}
+
+body.notebook-cellules .md-block-toolbar .md-btn-up::before,
+body.notebook-cellules .md-block-toolbar .md-btn-down::before,
+body.notebook-cellules .code-block-toolbar .nc-code-up::before,
+body.notebook-cellules .code-block-toolbar .nc-code-down::before {
+  content: "";
+  width: 12px;
+  height: 14px;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 14'%3E%3Cpath d='M6 1L11.5 7H7.7V13H4.3V7H0.5Z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 14'%3E%3Cpath d='M6 1L11.5 7H7.7V13H4.3V7H0.5Z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+body.notebook-cellules .md-block-toolbar .md-btn-down::before,
+body.notebook-cellules .code-block-toolbar .nc-code-down::before {
+  transform: rotate(180deg);
+}
+
+/* ✂ : rouge au survol (suppression). */
+body.notebook-cellules .md-block-toolbar .md-btn-cut:hover,
+body.notebook-cellules .code-block-toolbar .nc-code-cut:hover {
+  background: #fdecea;
+  border-color: #c0392b;
+  color: #c0392b;
+}
+
 .code-block-toolbar + .CodeMirror {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
@@ -3575,6 +3639,14 @@ body.notebook-cellules .md-block-toolbar .comment-toggle-btn.is-disabled {
   opacity: 0.3;
   cursor: not-allowed;
   pointer-events: auto;
+}
+
+/* Grisé : pas de réaction au survol. */
+body.notebook-cellules .md-block-toolbar .comment-toggle-btn.is-disabled:hover,
+body.notebook-cellules .code-block-toolbar .comment-toggle-btn.is-disabled:hover {
+  background: #fff;
+  border-color: #a9b4c2;
+  color: #2d3748;
 }
 
 /* Fac-similés : ces boutons-là sont actifs (le reste de la barre ne capte
@@ -3775,6 +3847,29 @@ body.dariush-dark .nc-menu .nc-menu-choix:not(.is-disabled):hover {
 body.dariush-dark .nc-menu .nc-menu-choix.is-disabled {
   background: transparent;
   border-color: var(--dk-border);
+}
+
+body.dariush-dark.notebook-cellules .md-block-toolbar .comment-toggle-btn,
+body.dariush-dark.notebook-cellules .code-block-toolbar .comment-toggle-btn,
+body.dariush-dark.notebook-cellules .md-block-toolbar .comment-toggle-btn.is-disabled:hover,
+body.dariush-dark.notebook-cellules .code-block-toolbar .comment-toggle-btn.is-disabled:hover {
+  background: var(--dk-bg-soft);
+  border-color: #6b7685;
+  color: var(--dk-text);
+}
+
+body.dariush-dark.notebook-cellules .md-block-toolbar .comment-toggle-btn:not(.is-disabled):hover,
+body.dariush-dark.notebook-cellules .code-block-toolbar .comment-toggle-btn:not(.is-disabled):hover {
+  background: #2c3e5c;
+  border-color: #8ab4f8;
+  color: #8ab4f8;
+}
+
+body.dariush-dark.notebook-cellules .md-block-toolbar .md-btn-cut:not(.is-disabled):hover,
+body.dariush-dark.notebook-cellules .code-block-toolbar .nc-code-cut:not(.is-disabled):hover {
+  background: #4a2523;
+  border-color: #e57368;
+  color: #e57368;
 }
 
 body.dariush-dark .nc-menu,
