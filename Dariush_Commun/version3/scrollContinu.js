@@ -16,7 +16,7 @@
     déjà décodées, Mermaid déjà dessiné) ;
   - son code/sortie est réutilisé tel quel s'il n'a pas changé (cache).
 
-  Règles de fluidité (toutes vérifiées au test molette réel) :
+  Règles de fluidité :
   - Aucune correction de scroll différée : on ne compense QUE les
     variations de mise en page (positions relatives au document), jamais
     le défilement fait par l'élève entre-temps.
@@ -32,7 +32,12 @@
   - Clic dans une section inactive : active sa page (curseur posé au clic
     si c'est dans le code).
   - Zoom (Ctrl+molette, panneau zoom) : répercuté sur toutes les sections.
-  - Navigation verrouillée (groupe / aide) : sections inactives masquées.
+  - Travail en groupe ou aide (un seul pilote les pages) : le notebook
+    continu est entièrement démonté — zone de travail remise à sa place
+    d'origine, une seule page à l'écran, changement de page à l'ancienne
+    (scrollFlipPage en bout de défilement, boutons). Il est reconstruit à
+    la sortie du mode. window.__rubanEngage indique aux autres modules si
+    le notebook continu est en service.
   - Bouton lecture (petit triangle) en haut à gauche de chaque cellule de
     code : vert sur la page active (exécute, comme le bouton Exécuter),
     rouge sur les autres (active la page puis l'exécute), gris quand
@@ -72,7 +77,9 @@
   let enActivation = false;
   let ignoreScrollJusqua = 0;   // ignorer nos propres scrollTop / reflows
   let scrollReference = 0;      // position d'ancrage pour l'hystérésis
-  let verrouPrecedent = null;
+  let rubanEngage = false;      // notebook continu en service (hors groupe/aide)
+  let ancreMdc = null;          // repères des places d'origine de la zone vive
+  let ancreSplit = null;
   let styleApplique = { fontSize: null, theme: null };
   let dispositionAppliquee = "";
   let ecouteMoletteCtrl = false;
@@ -96,12 +103,13 @@
 
   function editeur() { return window.pythonEditor || null; }
 
-  // Même règle que pageScrollbar.js : groupe ou aide => navigation inerte.
-  function navAutorisee() {
-    if (window.__groupNavLocked === true) return false;
-    if (typeof window.groupeJoined === "function" && window.groupeJoined()) return false;
-    if (window.__aideConnecte === true) return false;
-    return true;
+  // Travail en groupe ou aide (prof comme élève) : un seul pilote les pages.
+  // Même règle que pageScrollbar.js.
+  function modeCollaboratif() {
+    if (window.__groupNavLocked === true) return true;
+    if (typeof window.groupeJoined === "function" && window.groupeJoined()) return true;
+    if (window.__aideConnecte === true) return true;
+    return false;
   }
 
   // ── Moteur markdown local (mêmes options que markdown.js) ────────────────
@@ -658,18 +666,63 @@
 
     styleApplique = styleCourant();
     dispositionAppliquee = signatureDisposition();
-    majVisibiliteVerrou();
     log("ruban construit :", total, "sections, page active", actif + 1);
   }
 
-  // ── Verrou groupe / aide : une seule page visible ────────────────────────
-  function majVisibiliteVerrou() {
-    const verrou = navAutorisee();
-    sections.forEach((s, i) => {
-      const voulu = (verrou || i === indiceLive) ? "" : "none";
-      if (s.el.style.display !== voulu) s.el.style.display = voulu;
-    });
-    verrouPrecedent = verrou;
+  // ── Mise en service / hors service (travail en groupe, aide) ─────────────
+  // Hors service : la zone vive retrouve EXACTEMENT sa place d'origine
+  // (repères posés au démarrage), le ruban est vidé et masqué, et
+  // window.__rubanEngage = false rend la main à l'ancien fonctionnement
+  // (scrollFlipPage, loadPageIntoEditor qui remonte en haut de page).
+  function desengagerRuban() {
+    if (!rubanEngage) return;
+    rubanEngage = false;
+    window.__rubanEngage = false;
+
+    if (settleTimer) { clearTimeout(settleTimer); settleTimer = null; }
+    basculeEnAttente = false;
+    majEcouteMoletteCtrl(false);
+
+    const { mdc, split } = widgetsVifs();
+    if (mdc && ancreMdc && ancreMdc.parentNode) {
+      ancreMdc.parentNode.insertBefore(mdc, ancreMdc.nextSibling);
+    }
+    if (split && ancreSplit && ancreSplit.parentNode) {
+      ancreSplit.parentNode.insertBefore(split, ancreSplit.nextSibling);
+    }
+
+    rubanEl.textContent = "";
+    sections = [];
+    rubanEl.style.display = "none";
+    ancrageSuspendu = 0;
+    zonePython.style.overflowAnchor = "";
+
+    const edit = editeur();
+    if (edit) edit.refresh();
+    // L'indicateur a pu afficher la page du milieu : retour à la page active.
+    const gestionnaire = pm();
+    if (gestionnaire && typeof gestionnaire.updatePaginationUi === "function") {
+      gestionnaire.updatePaginationUi();
+    }
+    zonePython.scrollTop = 0;
+    log("hors service (travail en groupe / aide)");
+  }
+
+  function engagerRuban() {
+    if (rubanEngage) return;
+    rubanEngage = true;
+    window.__rubanEngage = true;
+    rubanEl.style.display = "";
+    construireRuban();
+    allerAuDebutDeSection(indiceLive);
+    log("en service");
+  }
+
+  function verifierModeCollaboratif() {
+    if (!rubanEl) return;
+    const collaboratif = modeCollaboratif();
+    if (collaboratif && rubanEngage) desengagerRuban();
+    else if (!collaboratif && !rubanEngage) engagerRuban();
   }
 
   // ── Zoom / thème : uniquement sur VRAI changement ────────────────────────
@@ -803,7 +856,7 @@
     const edit = editeur();
     if (!gestionnaire || !edit || enActivation) return;
     if (j === indiceLive || j < 0 || j >= sections.length) return;
-    if (!navAutorisee()) return;
+    if (!rubanEngage) return;
     if (executionEnCours()) return;
 
     enActivation = true;
@@ -855,7 +908,7 @@
   // ── Défilement : indicateur en direct + bascule à l'arrêt ────────────────
   function evaluerBascule() {
     settleTimer = null;
-    if (enActivation || !navAutorisee()) return;
+    if (enActivation || !rubanEngage) return;
     const cible = pageAuMilieu();
     if (cible !== indiceLive) {
       // Pendant une exécution, la page qui tourne reste active (sa sortie
@@ -869,7 +922,7 @@
 
   function surScroll() {
     if (maintenantMs() < ignoreScrollJusqua) return;
-    if (!navAutorisee() || sections.length <= 1) return;
+    if (!rubanEngage || sections.length <= 1) return;
 
     // Hystérésis : tant qu'on n'a pas vraiment bougé depuis le dernier
     // ancrage, on ne réévalue rien (évite les allers-retours de pages).
@@ -908,7 +961,7 @@
     if (!secEl) return;
     const j = sections.findIndex((s) => s.el === secEl);
     if (j < 0 || j === indiceLive) return;
-    if (!navAutorisee()) return;
+    if (!rubanEngage) return;
     if (e.target.closest("a, .aide-btn, .sc-run-btn")) return;
     if (executionEnCours()) return;
     e.preventDefault();
@@ -932,6 +985,9 @@
   function surChangementExterne() {
     const gestionnaire = pm();
     if (!gestionnaire || !rubanEl) return;
+    // Entrée / sortie de travail en groupe ou d'aide détectée au plus tôt.
+    verifierModeCollaboratif();
+    if (!rubanEngage) return;
     if (enActivation) return;
 
     const total = gestionnaire.getPagesCount();
@@ -955,13 +1011,8 @@
       deplacerLiveVers(actif, null);
       const edit = editeur();
       if (edit) edit.refresh();
-      majVisibiliteVerrou();
       allerAuDebutDeSection(actif);
-      return;
     }
-
-    // Verrou groupe/aide posé ou levé.
-    if (navAutorisee() !== verrouPrecedent) majVisibiliteVerrou();
   }
 
   function allerAuDebutDeSection(j) {
@@ -1093,7 +1144,7 @@
     }
     const secEl = btn.closest(".sc-section");
     const j = sections.findIndex((s) => s.el === secEl);
-    if (j < 0 || executionEnCours() || !navAutorisee()) return;
+    if (j < 0 || executionEnCours() || !rubanEngage) return;
     activerPage(j, {});
     // Exécution une fois l'échange affiché (le triangle passe au vert puis au gris).
     if (indiceLive === j) requestAnimationFrame(() => executerPageActive());
@@ -1131,11 +1182,23 @@
     // Repère pour offsetTop des sections.
     if (!zonePython.style.position) zonePython.style.position = "relative";
 
+    // Repères des places d'origine de la zone vive, pour la remettre
+    // exactement en place hors service (travail en groupe, aide).
+    const { mdc } = widgetsVifs();
+    if (mdc && mdc.parentNode) {
+      ancreMdc = document.createComment(" place d'origine : markdowns ");
+      mdc.parentNode.insertBefore(ancreMdc, mdc);
+    }
+    ancreSplit = document.createComment(" place d'origine : code et sortie ");
+    split.parentNode.insertBefore(ancreSplit, split);
+
     // Le ruban prend la place de mainSplit dans le flux ; les zones de chat
     // et l'ancien système mono-bloc restent au-dessus, hors du ruban.
+    // Masqué tant qu'il n'est pas en service.
     rubanEl = document.createElement("div");
     rubanEl.id = "scRuban";
-    zonePython.insertBefore(rubanEl, split);
+    rubanEl.style.display = "none";
+    zonePython.insertBefore(rubanEl, ancreSplit);
 
     rubanEl.addEventListener("mousedown", surMousedown);
     zonePython.addEventListener("scroll", surScroll, { passive: true });
@@ -1154,7 +1217,12 @@
     observerStyleEditeurReel();
     observerDisposition();
     installerBoutonsLecture();
-    construireRuban();
+
+    // En service sauf en travail de groupe / aide ; on surveille ensuite
+    // l'entrée et la sortie de ces modes.
+    window.__rubanEngage = false;
+    verifierModeCollaboratif();
+    setInterval(verifierModeCollaboratif, 400);
     armerHysteresis();
 
     log("initialisé.");

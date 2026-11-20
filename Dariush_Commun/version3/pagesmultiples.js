@@ -260,9 +260,11 @@ function loadPageIntoEditor(index, options = {}) {
   }
 
   requestAnimationFrame(() => {
-    // Mode ruban (scrollContinu.js) : le scroll et le focus sont pilotés par
-    // le ruban, on ne les force pas ici (sinon l'écran sauterait en haut).
-    const rubanActif = window.SCROLL_CONTINU_ACTIF === true;
+    // Notebook continu en service (scrollContinu.js) : le scroll et le focus
+    // sont pilotés par le ruban, on ne les force pas ici (sinon l'écran
+    // sauterait en haut). Hors service (travail en groupe, aide, ou drapeau
+    // SCROLL_CONTINU_ACTIF absent) : comportement d'origine.
+    const rubanActif = window.__rubanEngage === true;
 
     if (!rubanActif) editor.focus();
     editor.refresh();
