@@ -306,12 +306,22 @@ function loadPageIntoEditor(index, options = {}) {
       pagesState.nextBtnEl.style.opacity = current >= total ? "0.5" : "1";
     }
 
+    // Infobulles : en notebook continu toutes les pages se suivent à l'écran,
+    // on rappelle donc ce qu'est une page et laquelle est concernée.
+    if (pagesState.addBtnEl) {
+      pagesState.addBtnEl.title =
+        `Ajouter une page vide juste après la page ${current}/${total}\n` +
+        "(une page = un ou plusieurs markdowns + une zone de code)";
+    }
+
     if (pagesState.removeBtnEl) {
       pagesState.removeBtnEl.disabled = total <= 1;
       pagesState.removeBtnEl.style.opacity = total <= 1 ? "0.5" : "1";
       pagesState.removeBtnEl.title = total <= 1
-        ? "Impossible de supprimer la dernière page"
-        : "Supprimer la page active";
+        ? "Impossible de supprimer : il ne reste qu'une seule page\n" +
+          "(une page = un ou plusieurs markdowns + une zone de code)"
+        : `Supprimer la page ${current}/${total}\n` +
+          "(tous ses markdowns et sa zone de code)";
     }
 
     // Bouton "Tous" : visible uniquement s'il y a au moins 2 pages.
@@ -351,7 +361,10 @@ function loadPageIntoEditor(index, options = {}) {
 function removeCurrentPage() {
   if (pagesState.pages.length <= 1) return;
 
-  const ok = confirm("Êtes-vous sûr de vouloir supprimer cette page ?");
+  const ok = confirm(
+    `Supprimer la page ${pagesState.activeIndex + 1}/${pagesState.pages.length} ?\n\n` +
+    "Tous ses markdowns et sa zone de code seront effacés."
+  );
 
   if (!ok) return;
 
