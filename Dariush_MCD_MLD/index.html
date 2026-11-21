@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dariush-MCD-MLD</title>
+<script>try{if(window.self!==window.top)document.documentElement.classList.add("embedded");}catch(e){document.documentElement.classList.add("embedded");}</script>
+<link rel="stylesheet" href="style.css?v=1">
+</head>
+<body>
+
+  <!-- Bandeau gris, identique à Dariush -->
+  <div class="top-bar">
+    <div class="top-bar-left">Dariush-MCD-MLD</div>
+  </div>
+
+  <p class="intro">
+    Construis un MCD (entités, associations, cardinalités) : le dessin du MCD, le schéma relationnel (MLD) et le script SQL sont générés au fur et à mesure, prêts à coller dans un markdown ou dans l'éditeur SQL.
+  </p>
+
+  <div class="wrap">
+    <!-- ================= ÉDITEUR ================= -->
+    <section class="col editor">
+      <div class="toolbar">
+        <button class="primary" id="addEntite">+ Entité</button>
+        <button class="primary asso" id="addAsso">+ Association</button>
+        <label class="field" style="margin-left:auto">
+          Sens du tracé
+          <select id="sens">
+            <option value="LR">Gauche → droite</option>
+            <option value="TB">Haut → bas</option>
+          </select>
+        </label>
+      </div>
+
+      <div id="listView">
+        <h3 class="list-title">Entités</h3>
+        <div class="items-list" id="entitesList"></div>
+        <h3 class="list-title">Associations</h3>
+        <div class="items-list" id="assosList"></div>
+        <p class="empty-hint" id="emptyHint">
+          Commence par « + Entité » : donne-lui un nom et des attributs, puis coche
+          son identifiant. Ajoute ensuite des associations entre les entités et
+          choisis les cardinalités de chaque patte.
+        </p>
+
+        <details class="import">
+          <summary>Importer un code Mocodo ou un bloc déjà généré</summary>
+          <p class="code-note">Colle un code Mocodo (une ligne par entité ou association) ou un bloc <code>```mermaid</code> produit par Dariush-MCD-MLD pour le modifier.</p>
+          <textarea id="importText" spellcheck="false" placeholder="CLIENT: id client, nom, prénom&#10;PASSER, 0N CLIENT, 11 COMMANDE&#10;COMMANDE: num commande, date"></textarea>
+          <div class="import-actions">
+            <button class="ghost" id="importBtn">Charger</button>
+            <button class="danger" id="resetBtn">Tout effacer</button>
+          </div>
+          <div class="import-msg" id="importMsg"></div>
+        </details>
+      </div>
+
+      <div id="detailView" style="display:none"></div>
+    </section>
+
+    <!-- ================= SORTIE ================= -->
+    <section class="col output">
+      <div class="preview-card">
+        <div class="card-head">
+          <div class="tabs">
+            <button class="tab on" id="tabMCD" type="button">MCD</button>
+            <button class="tab" id="tabMLD" type="button">MLD schéma</button>
+          </div>
+          <button class="ghost small" id="zoomBtn" type="button" title="Afficher le dessin à sa taille réelle (avec défilement) ou l'ajuster à la largeur">Taille réelle</button>
+        </div>
+        <div id="preview"><div class="preview-msg">Ajoute une entité pour voir le MCD.</div></div>
+        <ul class="warnings" id="warnings" hidden></ul>
+      </div>
+
+      <button class="primary copy-all" id="copyAllBtn">Tout copier pour le markdown (MCD + MLD)</button>
+      <span class="copied center" id="copiedAll" hidden>Copié : colle-le dans une cellule markdown.</span>
+
+      <div class="code-card">
+        <div class="card-head">
+          <h2>Bloc MCD (markdown)</h2>
+          <span><button class="ghost" id="copyMcdBtn">Copier</button><span class="copied" id="copiedMcd" hidden>Copié</span></span>
+        </div>
+        <p class="code-note">Le code Mocodo du MCD est rangé en commentaire (lignes <code>%% mcd:</code>) : recolle ce bloc dans « Importer » pour reprendre le MCD.</p>
+        <textarea id="codeMcd" readonly spellcheck="false"></textarea>
+      </div>
+      <div class="code-card">
+        <div class="card-head">
+          <h2>MLD texte (markdown)</h2>
+          <span><button class="ghost" id="copyMldBtn">Copier</button><span class="copied" id="copiedMld" hidden>Copié</span></span>
+        </div>
+        <textarea id="codeMld" readonly spellcheck="false"></textarea>
+      </div>
+      <div class="code-card">
+        <div class="card-head">
+          <h2>MLD schéma (markdown)</h2>
+          <span><button class="ghost" id="copyMldSchemaBtn">Copier</button><span class="copied" id="copiedMldSchema" hidden>Copié</span></span>
+        </div>
+        <textarea id="codeMldSchema" readonly spellcheck="false"></textarea>
+      </div>
+      <div class="code-card">
+        <div class="card-head">
+          <h2>SQL (CREATE TABLE)</h2>
+          <span><button class="ghost" id="copySqlBtn">Copier</button><span class="copied" id="copiedSql" hidden>Copié</span></span>
+        </div>
+        <p class="code-note">À coller dans l'éditeur SQL puis exécuter : la base est créée, vide, avec ses clés primaires et étrangères.</p>
+        <textarea id="codeSql" readonly spellcheck="false"></textarea>
+      </div>
+      <div class="code-card">
+        <div class="card-head">
+          <h2>Code Mocodo</h2>
+          <span><button class="ghost" id="copyMocodoBtn">Copier</button><span class="copied" id="copiedMocodo" hidden>Copié</span></span>
+        </div>
+        <p class="code-note">Le même MCD au format texte de Mocodo (mocodo.net).</p>
+        <textarea id="codeMocodo" readonly spellcheck="false"></textarea>
+      </div>
+    </section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="moteur.js?v=1"></script>
+  <script src="script.js?v=1"></script>
+</body>
+</html>
