@@ -242,6 +242,15 @@
     throw new Error("Conversion JPEG impossible.");
   }
 
+  // JPEG déjà à la bonne taille (typiquement une image enregistrée par
+  // Dariush) que la recompression n'allège pas nettement : on le garde tel
+  // quel. Sinon chaque aller-retour .ipynb -> Dariush -> .ipynb le
+  // recompresserait et lui ferait perdre un peu de qualité.
+  const dejaJpeg = /^data:image\/jpe?g;base64,/i.test(source);
+  if (dejaJpeg && scale === 1 && jpegDataUrl.length >= source.length * 0.9) {
+    return source;
+  }
+
   return jpegDataUrl;
 }
 

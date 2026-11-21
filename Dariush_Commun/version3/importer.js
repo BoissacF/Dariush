@@ -333,26 +333,12 @@ async function openNotebookFileFromDisk(file) {
     throw new Error("Notebook Jupyter invalide : propriété 'cells' absente.");
   }
 
- const hasMarkdown = notebook.cells.some(
-  cell => String(cell?.cell_type || "") === "markdown"
-);
+  // Le notebook est le format de Dariush : ouverture sans message (l'ancienne
+  // alerte "Notebook importé, cellules adaptées, images compressées"
+  // s'affichait presque à chaque fois).
+  const importResult = await buildPagesFromNotebookObject(notebook);
+  const pages = importResult.pages;
 
-const importResult = await buildPagesFromNotebookObject(notebook);
-const pages = importResult.pages;
-const imagesWereOptimized = importResult.imagesWereOptimized;
-
-if (hasMarkdown || imagesWereOptimized) {
-  let message =
-    "Notebook importé.\n\n" +
-    "Les cellules ont été adaptées au format Dariush Python (une page = texte + code).";
-
-  if (imagesWereOptimized) {
-    message +=
-      "\n\nLes images du notebook ont été légèrement compressées et redimensionnées si nécessaire.";
-  }
-
-  alert(message);
-}
   if (window.PagesMultiples && typeof window.PagesMultiples.setAllPages === "function") {
     window.PagesMultiples.setAllPages(pages, 0);
   } else if (window.pythonEditor) {
