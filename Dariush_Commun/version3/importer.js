@@ -22,6 +22,28 @@ function normalizeNotebookText(text) {
   return String(text ?? "").replace(/\r\n/g, "\n");
 }
 
+/* Diagrammes Mermaid : à l'export, chaque bloc ```mermaid devient une image
+   (les logiciels de notebooks ne savent pas les dessiner). Le texte d'origine
+   de la cellule est gardé dans ses métadonnées (dariush_markdown), que ces
+   logiciels ignorent, avec l'empreinte du texte visible (dariush_empreinte).
+   À l'ouverture dans Dariush, si le texte visible n'a pas été modifié
+   ailleurs entre-temps, on reprend le texte d'origine : diagramme modifiable,
+   une seule fois à l'écran. */
+function empreinteTexteNotebook(texte) {
+  const s = String(texte ?? "");
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) {
+    h = ((h << 5) + h) ^ s.charCodeAt(i);
+    h = h >>> 0;
+  }
+  return "e" + h.toString(36) + "-" + s.length;
+}
+
+function texteCiteImageNotebook(texte, nom) {
+  const echappe = String(nom).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp("attachment:" + echappe + "(?![\\w.-])").test(String(texte ?? ""));
+}
+
 function getPagesForNotebookExport() {
   if (window.PagesMultiples && typeof window.PagesMultiples.getAllPages === "function") {
     return window.PagesMultiples.getAllPages();
@@ -75,10 +97,13 @@ function buildNotebookObjectFromPages(pages) {
 
     const code = normalizeNotebookText(page?.code || "");
     const pageImages = (page?.images && typeof page.images === "object") ? page.images : {};
+    // Texte d'origine des blocs dont les diagrammes Mermaid ont été changés
+    // en images (inlineMermaidAsJpegAttachments).
+    const originaux = Array.isArray(page?.markdownsDariush) ? page.markdownsDariush : null;
 
     // Une cellule markdown par bloc. On exporte AUSSI les blocs vides
     // (ils peuvent être volontaires : emplacement en attente de réponse).
-    for (const rawBlock of blocks) {
+    blocks.forEach((rawBlock, bi) => {
       const normalized = normalizeNotebookText(rawBlock || "");
       const source = normalized
         .split("\n")
@@ -87,15 +112,22 @@ function buildNotebookObjectFromPages(pages) {
 
       const attachments = buildAttachmentsForBlock(normalized, pageImages);
 
+      const metadata = { dariush_cell_role: "comment" };
+      if (originaux && typeof originaux[bi] === "string") {
+        const original = normalizeNotebookText(originaux[bi]);
+        if (original !== normalized) {
+          metadata.dariush_markdown = original;
+          metadata.dariush_empreinte = empreinteTexteNotebook(source);
+        }
+      }
+
       cells.push({
         cell_type: "markdown",
-        metadata: {
-          dariush_cell_role: "comment"
-        },
+        metadata,
         source: source,
         ...(attachments ? { attachments } : {})
       });
-    }
+    });
 
     cells.push({
       cell_type: "code",
@@ -167,12 +199,21 @@ let pendingMarkdowns = [];
     if (cellType === "markdown" || cellType === "raw") {
       // Chaque cellule markdown/raw devient un BLOC distinct (plus de fusion).
       // On garde même les cellules vides (peuvent être volontaires : attente de réponse).
-      pendingMarkdowns.push(sourceText);
+      // Texte d'origine Dariush (diagrammes Mermaid modifiables) si la
+      // cellule n'a pas été modifiée ailleurs depuis l'enregistrement.
+      const meta = (cell?.metadata && typeof cell.metadata === "object") ? cell.metadata : {};
+      const restaure = typeof meta.dariush_markdown === "string" &&
+        meta.dariush_empreinte === empreinteTexteNotebook(sourceText);
+      const texteCellule = restaure ? normalizeNotebookText(meta.dariush_markdown) : sourceText;
+      pendingMarkdowns.push(texteCellule);
 
       const attachments = cell?.attachments;
       if (attachments && typeof attachments === "object") {
         for (const [name, attachmentData] of Object.entries(attachments)) {
           if (!attachmentData || typeof attachmentData !== "object") continue;
+          // Texte d'origine repris : les images des diagrammes (redessinés
+          // par Dariush) ne servent plus, seules les images citées restent.
+          if (restaure && !texteCiteImageNotebook(texteCellule, name)) continue;
 
           const mimeEntries = Object.entries(attachmentData);
           if (!mimeEntries.length) continue;
@@ -377,10 +418,14 @@ async function inlineMermaidAsJpegAttachments(pages) {
   }
   if (!hasMermaid) return pages;
 
-  // Config sûre pour l'export (texte SVG natif, pas de HTML/foreignObject)
+  // Config sûre pour l'export (texte SVG natif, pas de HTML/foreignObject).
+  // Mermaid 11 lit htmlLabels au premier niveau : sous "flowchart" seul, il
+  // était ignoré, le SVG gardait des foreignObject, le canvas était "taché"
+  // et la conversion échouait sans rien dire (bloc resté en texte).
   try {
     window.mermaid.initialize({
       startOnLoad: false, securityLevel: "strict", theme: "default",
+      htmlLabels: false,
       flowchart: { htmlLabels: false }
     });
   } catch (e) {}
@@ -459,6 +504,9 @@ async function inlineMermaidAsJpegAttachments(pages) {
     }
 
     const newPage = Object.assign({}, page, { images: newImages });
+    // Texte d'origine (diagrammes modifiables), écrit dans les métadonnées
+    // des cellules par buildNotebookObjectFromPages.
+    newPage.markdownsDariush = hadMarkdowns ? page.markdowns.slice() : [String(page.comment || "")];
     if (hadMarkdowns) newPage.markdowns = blocks; else newPage.comment = blocks[0];
     out.push(newPage);
   }
@@ -810,30 +858,28 @@ function askOpenPythonAction() {
     title.style.marginBottom = "12px";
     panel.appendChild(title);
     if (window.DariushDrive) window.DariushDrive.attachCheckbox(title);
+    // Le notebook est le format de Dariush : il vient en premier. Les
+    // anciens fichiers .dpy s'ouvrent aussi par ce choix.
     const actions = [
   {
-    value: "open_dariush",
-    label: "1 : Ouvrir un fichier Dariush Python (.dpy)"
+    value: "open_notebook",
+    label: "1 : Ouvrir un notebook (.ipynb)"
   },
   {
     value: "open_file",
-    label: "2 : Importer un fichier Python et le copier dans la zone de code"
-  },
-  {
-    value: "open_notebook",
-    label: "3 : Importer un notebook Jupyter (.ipynb)"
+    label: "2 : Importer un fichier Python et le copier dans la zone de code (.py)"
   },
   {
     value: "load_module",
-    label: "4 : Charger un module Python pour pouvoir l'importer"
+    label: "3 : Charger un module Python pour pouvoir l'importer"
   },
   {
     value: "load_resource",
-    label: "5 : Charger une image ou un autre fichier ressource"
+    label: "4 : Charger une image ou un autre fichier ressource"
   },
   {
     value: "import_pdf",
-    label: "6 : Importer un PDF pour le transformer en notebook"
+    label: "5 : Importer un PDF pour le transformer en notebook"
   }
 ];
 
@@ -1034,6 +1080,39 @@ function showImportInfoModal(title, message) {
   document.body.appendChild(overlay);
 }
 
+/* =========================================================
+   ANCIENS FICHIERS DARIUSH (.dpy, .dsql)
+   Ils ne sont plus proposés dans les menus, mais "Ouvrir un notebook" les
+   ouvre encore : leur contenu est celui d'un lien de partage
+   (code=...&l=...&c=...), reconnu quel que soit le nom du fichier.
+   ========================================================= */
+function estAncienFichierDariush(texte) {
+  const t = String(texte ?? "").trim();
+  if (!t || t.charAt(0) === "{") return false;
+  try {
+    return new URLSearchParams(t.replace(/^\?/, "")).has("code");
+  } catch (err) {
+    return false;
+  }
+}
+
+// ouvrirAncien : openDariushFileFromDisk (Python) ou openDsqlFileFromDisk (SQL).
+async function ouvrirNotebookOuAncienFichier(file, ouvrirAncien) {
+  if (!file) return;
+  const texte = await file.text();
+  if (estAncienFichierDariush(texte) && typeof ouvrirAncien === "function") {
+    await ouvrirAncien(file);
+    showImportInfoModal(
+      "Ancien fichier Dariush",
+      `« ${file.name} » est un ancien fichier Dariush : il est ouvert normalement.\n\n` +
+      "Pour le garder au format actuel, enregistrez-le en notebook " +
+      "(menu Enregistrer, « Enregistrer en notebook (.ipynb) »)."
+    );
+    return;
+  }
+  await openNotebookFileFromDisk(file);
+}
+
 async function handleOpenPythonAction() {
   const action = await askOpenPythonAction();
   if (!action) return;
@@ -1044,16 +1123,6 @@ async function handleOpenPythonAction() {
   }
 
   input.value = "";
-
-  if (action === "open_dariush") {
-    input.accept = ".dpy";
-
-    const file = await choosePythonFile();
-    if (!file) return;
-
-    await openDariushFileFromDisk(file);
-    return;
-  }
 
   if (action === "open_file") {
     input.accept = ".py";
@@ -1066,12 +1135,13 @@ async function handleOpenPythonAction() {
   }
   
   if (action === "open_notebook") {
-  input.accept = ".ipynb";
+  // Anciens fichiers Dariush Python (.dpy) acceptés : reconnus au contenu.
+  input.accept = ".ipynb,.dpy";
 
   const file = await choosePythonFile();
   if (!file) return;
 
-  await openNotebookFileFromDisk(file);
+  await ouvrirNotebookOuAncienFichier(file, openDariushFileFromDisk);
   return;
 }
 

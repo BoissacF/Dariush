@@ -1073,22 +1073,16 @@ function pickFileForSql(accept) {
    OUVRIR — 4 actions
    ============================================================ */
 async function handleOpenSqlAction() {
+  // Le notebook est le format de Dariush : il vient en premier. Les
+  // anciens fichiers .dsql s'ouvrent aussi par ce choix.
   const action = await chooseSqlActionDialog("Quel fichier voulez-vous ouvrir ?", [
-    { value: "open_dsql",   label: "1 : Ouvrir un fichier Dariush SQL (" + DSQL_FILE_EXTENSION + ")" },
+    { value: "open_ipynb",  label: "1 : Ouvrir un notebook (.ipynb)" },
     { value: "open_sql",    label: "2 : Importer un fichier SQL (.sql)" },
-    { value: "open_ipynb",  label: "3 : Importer un notebook Jupyter (.ipynb)" },
-    { value: "import_db",   label: "4 : Importer une base de données (.db)" },
-    { value: "import_pdf",  label: "5 : Importer un PDF pour le transformer en notebook" }
+    { value: "import_db",   label: "3 : Importer une base de données (.db)" },
+    { value: "import_pdf",  label: "4 : Importer un PDF pour le transformer en notebook" }
   ]);
 
   if (!action) return;
-
-  if (action === "open_dsql") {
-    const file = await pickFileForSql(".dsql");
-    if (!file) return;
-    await openDsqlFileFromDisk(file);
-    return;
-  }
 
   if (action === "open_sql") {
     const file = await pickFileForSql(".sql,text/plain");
@@ -1098,12 +1092,13 @@ async function handleOpenSqlAction() {
   }
 
   if (action === "open_ipynb") {
-    const file = await pickFileForSql(".ipynb");
+    // Anciens fichiers Dariush SQL (.dsql) acceptés : reconnus au contenu.
+    const file = await pickFileForSql(".ipynb,.dsql");
     if (!file) return;
-    // On délègue à la fonction notebook du commun, qui sait déjà
-    // remplir les pages multiples à partir des cells code+markdown.
-    if (typeof openNotebookFileFromDisk === "function") {
-      await openNotebookFileFromDisk(file);
+    // On délègue au commun (importer.js), qui sait déjà remplir les pages
+    // multiples à partir des cells code+markdown.
+    if (typeof ouvrirNotebookOuAncienFichier === "function") {
+      await ouvrirNotebookOuAncienFichier(file, openDsqlFileFromDisk);
     } else {
       alert("Fonction d'import notebook indisponible.");
     }
@@ -1211,17 +1206,17 @@ async function importDbFileFromDisk(file) {
    ENREGISTRER — 4 actions
    ============================================================ */
 async function handleSaveSqlAction() {
+  // Le notebook est le format de Dariush : il vient en premier. Le .dsql
+  // n'est plus proposé (saveDsqlFileToDisk reste disponible).
   const action = await chooseSqlActionDialog("Quel format de fichier ?", [
-    { value: "save_dsql",   label: "1 : Enregistrer tout dans un fichier Dariush SQL (" + DSQL_FILE_EXTENSION + ")" },
+    { value: "save_ipynb",  label: "1 : Enregistrer en notebook (.ipynb)" },
     { value: "save_sql",    label: "2 : Exporter le code actif dans un fichier SQL (.sql)" },
-    { value: "save_ipynb",  label: "3 : Exporter en notebook Jupyter (.ipynb)" },
-    { value: "export_db",   label: "4 : Exporter la base de données (.db)" },
-    { value: "save_pdf",    label: "5 : Exporter en PDF (impression)" }
+    { value: "export_db",   label: "3 : Exporter la base de données (.db)" },
+    { value: "save_pdf",    label: "4 : Exporter en PDF (impression)" }
   ]);
 
   if (!action) return;
 
-  if (action === "save_dsql")  { saveDsqlFileToDisk(); return; }
   if (action === "save_sql")   { savePlainSqlFileToDisk(); return; }
   if (action === "save_ipynb") {
     if (typeof saveNotebookFileToDisk === "function") {

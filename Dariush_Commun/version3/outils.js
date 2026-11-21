@@ -1680,31 +1680,25 @@ window.saveDariushFileToDiskWithFixedName = saveDariushFileToDiskWithFixedName;
  * Menu Enregistrer
  */
 async function handleSavePythonAction() {
+  // Le notebook est le format de Dariush : il vient en premier. Le .dpy
+  // n'est plus proposé (ses fonctions restent : liens, sauvegarde avant
+  // connexion au travail en groupe).
   const choice = await chooseActionDialog("Quel format de fichier ?", [
     {
-      value: "dpy",
-      label: "1 : Enregistrer tout dans un fichier Dariush Python (" + DARIUSH_FILE_EXTENSION + ")"
+      value: "ipynb",
+      label: "1 : Enregistrer en notebook (.ipynb)"
     },
     {
       value: "py",
       label: "2 : Exporter le code actif dans un fichier Python (.py)"
     },
-    {
-      value: "ipynb",
-      label: "3 : Exporter en notebook Jupyter (.ipynb)"
-    },
-    { value: "pdf",   label: "4 : Exporter en PDF (impression)" }
+    { value: "pdf",   label: "3 : Exporter en PDF (impression)" }
   ]);
 
   if (!choice) return;
 
   if (choice === "py") {
     savePythonFileToDisk();
-    return;
-  }
-
-  if (choice === "dpy") {
-    saveDariushFileToDisk();
     return;
   }
 
