@@ -404,16 +404,13 @@ async function inlineMermaidAsJpegAttachments(pages) {
   }
   if (!hasMermaid) return pages;
 
-  // Config sûre pour l'export (texte SVG natif, pas de HTML/foreignObject).
-  // Mermaid 11 lit htmlLabels au premier niveau : sous "flowchart" seul, il
-  // était ignoré, le SVG gardait des foreignObject, le canvas était "taché"
-  // et la conversion échouait sans rien dire (bloc resté en texte).
+  // Mêmes réglages que l'affichage (markdown.js) : étiquettes HTML comprises,
+  // indispensables aux diagrammes de l'outil de graphes (sommets dimensionnés
+  // par un <div>). Sans HTML (htmlLabels: false), ce <div> s'affichait en
+  // texte brut dans l'image. Le SVG contient alors des foreignObject : il est
+  // chargé par une adresse data: (voir svgToJpeg), pas par un lien blob:.
   try {
-    window.mermaid.initialize({
-      startOnLoad: false, securityLevel: "strict", theme: "default",
-      htmlLabels: false,
-      flowchart: { htmlLabels: false }
-    });
+    window.mermaid.initialize({ startOnLoad: false, securityLevel: "strict", theme: "default" });
   } catch (e) {}
 
   const SCALE = 2;        // rendu généreux -> labels nets
@@ -434,8 +431,11 @@ async function inlineMermaidAsJpegAttachments(pages) {
       } catch (e) {}
       if (!w || !h) { w = 600; h = 400; }
 
-      const blob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
+      // Adresse data: et non lien blob: : avec des foreignObject (étiquettes
+      // HTML), Chrome "tache" le canvas d'une image blob: et refuse
+      // toDataURL ; il l'accepte pour une image data:. Si un navigateur
+      // refuse quand même, le bloc reste en texte (rien n'est perdu).
+      const url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
       const img = new Image();
       img.onload = function () {
         const cw = Math.max(1, Math.round(w * SCALE));
@@ -445,11 +445,10 @@ async function inlineMermaidAsJpegAttachments(pages) {
         const ctx = canvas.getContext("2d");
         ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, cw, ch); // fond blanc (JPEG)
         ctx.drawImage(img, 0, 0, cw, ch);
-        URL.revokeObjectURL(url);
         try { resolve(canvas.toDataURL("image/jpeg", QUALITY)); }
         catch (e) { reject(e); }
       };
-      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error("SVG illisible")); };
+      img.onerror = function () { reject(new Error("SVG illisible")); };
       img.src = url;
     });
   }
