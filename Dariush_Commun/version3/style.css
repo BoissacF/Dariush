@@ -1959,6 +1959,12 @@ body.menu-modal-open {
   transform: translateY(-1px);
 }
 
+/* Bouton "New" : un mot et non une icône. À la taille des icônes (15 px,
+   gras), il mesurait 31 px pour 28 px de place et dépassait du cadre. */
+#newFileButton {
+  font-size: 12px;
+}
+
 /* bouton principal exécuter */
 .run-btn {
   height: 32px;
