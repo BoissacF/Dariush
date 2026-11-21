@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dariush-MCD-MLD</title>
+<title>Dariush MCD-MLD</title>
 <script>try{if(window.self!==window.top)document.documentElement.classList.add("embedded");}catch(e){document.documentElement.classList.add("embedded");}</script>
-<link rel="stylesheet" href="style.css?v=1">
+<link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
 
   <!-- Bandeau gris, identique à Dariush -->
   <div class="top-bar">
-    <div class="top-bar-left">Dariush-MCD-MLD</div>
+    <div class="top-bar-left">Dariush MCD-MLD</div>
   </div>
 
   <p class="intro">
@@ -46,7 +46,7 @@
 
         <details class="import">
           <summary>Importer un code Mocodo ou un bloc déjà généré</summary>
-          <p class="code-note">Colle un code Mocodo (une ligne par entité ou association) ou un bloc <code>```mermaid</code> produit par Dariush-MCD-MLD pour le modifier.</p>
+          <p class="code-note">Colle un code Mocodo (une ligne par entité ou association) ou un bloc <code>```mermaid</code> produit par Dariush MCD-MLD pour le modifier.</p>
           <textarea id="importText" spellcheck="false" placeholder="CLIENT: id client, nom, prénom&#10;PASSER, 0N CLIENT, 11 COMMANDE&#10;COMMANDE: num commande, date"></textarea>
           <div class="import-actions">
             <button class="ghost" id="importBtn">Charger</button>
@@ -75,6 +75,8 @@
 
       <button class="primary copy-all" id="copyAllBtn">Tout copier pour le markdown (MCD + MLD)</button>
       <span class="copied center" id="copiedAll" hidden>Copié : colle-le dans une cellule markdown.</span>
+      <button class="primary copy-all" id="copySqlTopBtn">Copier le code SQL</button>
+      <span class="copied center" id="copiedSqlTop" hidden>Copié : colle-le dans l'éditeur SQL puis exécute-le.</span>
 
       <div class="code-card">
         <div class="card-head">
@@ -118,7 +120,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
-  <script src="moteur.js?v=1"></script>
-  <script src="script.js?v=1"></script>
+  <script src="moteur.js?v=2"></script>
+  <script src="script.js?v=2"></script>
 </body>
 </html>

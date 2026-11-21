@@ -1,5 +1,5 @@
 /*
-  moteur.js — Dariush-MCD-MLD
+  moteur.js — Dariush MCD-MLD
   Cœur de calcul, indépendant de la page (aucun accès au DOM) :
   - lecture et écriture d'un MCD au format texte Mocodo (sous-ensemble) ;
   - passage MCD -> MLD selon les règles de Merise ;
@@ -100,10 +100,19 @@
       .replace(/([\\*_`])/g, "\\$1");
   }
 
-  // Type SQL par défaut : entier pour un identifiant, texte sinon.
-  function typeEffectif(type, ident) {
+  // Type SQL choisi quand l'attribut est en « type auto » : entier pour un
+  // identifiant dont le nom commence par num, numéro, n°, no, id ou
+  // identifiant (id client, num adhérent…), texte pour tout le reste
+  // (code rayon, réf produit, isbn, matricule…). En SQLite, une clé primaire
+  // INTEGER refuse le texte : un code comme 'R1' doit donc être en texte.
+  function typeAuto(nom, ident) {
+    if (!ident) return "TEXT";
+    const n = String(nom || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    return /^(num|numero|n°|no|id|identifiant)(?![a-z0-9])/.test(n) ? "INTEGER" : "TEXT";
+  }
+  function typeEffectif(type, ident, nom) {
     const t = String(type || "").trim();
-    return t ? t : (ident ? "INTEGER" : "TEXT");
+    return t ? t : typeAuto(nom, ident);
   }
   // Mot français affiché dans le schéma du MLD.
   function typeFr(type) {
@@ -202,7 +211,7 @@
     return { modele, avertissements };
   }
 
-  // Accepte un texte Mocodo OU un bloc Mermaid produit par Dariush-MCD-MLD
+  // Accepte un texte Mocodo OU un bloc Mermaid produit par Dariush MCD-MLD
   // (le texte Mocodo y est rangé dans les commentaires « %% mcd: »).
   function lireTexteColle(texte) {
     const t = String(texte || "");
@@ -298,7 +307,7 @@
         const n = String(a.nom || "").trim();
         if (!n) return;
         if (t.colonnes.some((c) => c.nom === n)) { avertissements.push(nom + " : l'attribut « " + n + " » apparaît deux fois."); return; }
-        t.colonnes.push({ nom: n, type: typeEffectif(a.type, a.ident), pk: !!a.ident, fk: false, nonNul: false });
+        t.colonnes.push({ nom: n, type: typeEffectif(a.type, a.ident, n), pk: !!a.ident, fk: false, nonNul: false });
       });
       if (!t.colonnes.some((c) => c.pk)) avertissements.push("L'entité " + nom + " n'a pas d'identifiant : coche « identifiant » sur un de ses attributs.");
       // Identifiant en tête, ordre conservé sinon.
@@ -307,11 +316,13 @@
       parId[e.id] = t;
     });
 
+    // Ajoute dans t la clé étrangère vers ref et renvoie ses colonnes.
+    // opt.unique : clé étrangère UNIQUE (les deux pattes ont un maximum de 1).
     const ajouterEtrangere = (t, ref, opt) => {
       const pks = ref.colonnes.filter((c) => c.pk && !c.fk);
       if (!pks.length) {
         avertissements.push(opt.asso + " : " + ref.nom + " n'a pas d'identifiant, la clé étrangère vers " + ref.nom + " n'a pas pu être créée.");
-        return;
+        return [];
       }
       const cols = pks.map((pk) => {
         const base = opt.role ? pk.nom + " " + opt.role : pk.nom;
@@ -322,7 +333,9 @@
         t.colonnes.push(col);
         return col;
       });
-      t.etrangeres.push({ cols, ref, refCols: pks, gauche: opt.gauche, droite: opt.droite });
+      if (opt.unique && cols.length === 1) cols[0].unique = true;
+      t.etrangeres.push({ cols, ref, refCols: pks, gauche: opt.gauche, droite: opt.droite, unique: !!opt.unique });
+      return cols;
     };
 
     const droitePour = (card) => ({ "0N": "o{", "1N": "|{", "01": "o|", "11": "||" }[card] || "o{");
@@ -353,20 +366,38 @@
         const avec11 = pattes.filter((p) => card(p) === "11");
         const porteur = avec11[0] || fonct[0];
         const tP = parId[porteur.entite];
-        if (avec11.length >= 2 || (avec11.length === 0 && fonct.length >= 2)) {
-          avertissements.push(nom + " : plusieurs pattes en " + cardTexte(card(porteur)) + ". La clé étrangère est placée dans " + tP.nom + " ; change l'ordre des pattes pour la placer de l'autre côté.");
-        }
+        const ambigu = avec11.length >= 2 || (avec11.length === 0 && fonct.length >= 2);
         if (pattes.length > 2) {
           avertissements.push(nom + " relie " + pattes.length + " entités avec une patte en " + cardTexte(card(porteur)) + " : les clés étrangères vont toutes dans " + tP.nom + ". Cas rare, à vérifier.");
         }
+        const creees = [];
         pattes.filter((p) => p !== porteur).forEach((p) => {
-          ajouterEtrangere(tP, parId[p.entite], {
+          // Les deux pattes ont un maximum de 1 : une occurrence d'en face ne
+          // peut être référencée qu'une fois, d'où UNIQUE sur la clé étrangère.
+          creees.push(...ajouterEtrangere(tP, parId[p.entite], {
             asso: nom, role: roleDe(p), suffixe: nom.toLowerCase(), pk: false,
             nonNul: card(porteur) === "11",
+            unique: estFonctionnelle(card(p)),
             gauche: card(porteur) === "11" ? "||" : "|o",
             droite: droitePour(card(p))
-          });
+          }));
         });
+        // Deux pattes au même maximum de 1 (0,1 - 0,1 ou 1,1 - 1,1) : la clé
+        // pouvait aller d'un côté ou de l'autre. Une réflexive n'a pas ce
+        // choix (c'est la même table des deux côtés).
+        if (ambigu && !reflexive) {
+          const cles = creees.map((c) => "#" + c.nom).join(", ") || "clé étrangère";
+          if (pattes.length === 2) {
+            const autre = pattes.find((p) => p !== porteur);
+            const nomAutre = parId[autre.entite].nom;
+            avertissements.push(nom + " relie " + tP.nom + " (" + cardTexte(card(porteur)) + ") et " + nomAutre + " (" + cardTexte(card(autre)) +
+              ") : la clé étrangère peut aller d'un côté ou de l'autre. Elle est placée dans " + tP.nom + " (" + cles + "). Pour la mettre dans " +
+              nomAutre + ", ouvre " + nom + " et clique sur ↑ de la patte " + nomAutre + ".");
+          } else {
+            avertissements.push(nom + " : plusieurs pattes en " + cardTexte(card(porteur)) + ", la clé étrangère est placée dans " + tP.nom + " (" + cles +
+              "). Pour choisir une autre entité, ouvre " + nom + " et monte sa patte en premier avec ↑.");
+          }
+        }
         as.attributs.forEach((a) => {
           const n = String(a.nom || "").trim();
           if (n) tP.colonnes.push({ nom: nomLibre(tP, n, nom.toLowerCase()), type: typeEffectif(a.type, false), pk: false, fk: false, nonNul: false });
@@ -493,7 +524,7 @@
       if (!t.colonnes.length) { L.push("  " + t.nomSQL + " {", "  }"); return; }
       L.push("  " + t.nomSQL + " {");
       t.colonnes.forEach((c) => {
-        const cles = [c.pk ? "PK" : "", c.fk ? "FK" : ""].filter(Boolean).join(", ");
+        const cles = [c.pk ? "PK" : "", c.fk ? "FK" : "", c.unique ? "UK" : ""].filter(Boolean).join(", ");
         L.push("    " + typeFr(c.type) + " " + c.nomSQL + (cles ? " " + cles : ""));
       });
       L.push("  }");
@@ -525,8 +556,13 @@
       const lignes = t.colonnes.map((c) =>
         "  " + q(c.nomSQL) + " " + c.type +
         (pks.length === 1 && c.pk ? " PRIMARY KEY" : "") +
-        (c.nonNul && !c.pk ? " NOT NULL" : ""));
+        (c.nonNul && !c.pk ? " NOT NULL" : "") +
+        (c.unique ? " UNIQUE" : ""));
       if (pks.length > 1) lignes.push("  PRIMARY KEY (" + pks.map((c) => q(c.nomSQL)).join(", ") + ")");
+      // Clé étrangère UNIQUE sur plusieurs colonnes (identifiant composé en face).
+      t.etrangeres.filter((f) => f.unique && f.cols.length > 1).forEach((f) => {
+        lignes.push("  UNIQUE (" + f.cols.map((c) => q(c.nomSQL)).join(", ") + ")");
+      });
       t.etrangeres.forEach((f) => {
         lignes.push("  FOREIGN KEY (" + f.cols.map((c) => q(c.nomSQL)).join(", ") + ") REFERENCES " +
           q(f.ref.nomSQL) + " (" + f.refCols.map((c) => q(c.nomSQL)).join(", ") + ")");
@@ -539,7 +575,7 @@
   }
 
   window.MoteurMCD = {
-    CARDS, cardTexte, nouveauModele, nouvelId,
+    CARDS, cardTexte, nouveauModele, nouvelId, typeAuto,
     lireMocodo, lireTexteColle, ecrireMocodo,
     calculerMLD, mermaidMCD, mldTexte, mermaidMLD, sqlCreate
   };

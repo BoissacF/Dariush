@@ -1,6 +1,6 @@
 /*
   mcdPanel.js
-  Ouvre Dariush-MCD-MLD dans un panneau (iframe) DÉPLAÇABLE par-dessus Dariush SQL.
+  Ouvre Dariush MCD-MLD dans un panneau (iframe) DÉPLAÇABLE par-dessus Dariush SQL.
   Même fonctionnement et mêmes classes CSS que le panneau des graphes
   (graphPanel.js) : centré à l'ouverture, fermeture par ✕ / Échap / clic sur
   le fond, déplacement en saisissant le bandeau gris.

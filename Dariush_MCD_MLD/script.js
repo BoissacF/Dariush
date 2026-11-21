@@ -1,5 +1,5 @@
 /*
-  script.js — Dariush-MCD-MLD
+  script.js — Dariush MCD-MLD
   Interface de construction du MCD (liste, fiches entité / association),
   aperçu Mermaid et zones de code à copier. Les calculs sont dans moteur.js.
 */
@@ -34,8 +34,11 @@
     return new Set(ids).size < ids.length;
   };
 
+  // Liste des types SQL d'un attribut. L'option « auto » affiche le type
+  // qu'elle donnera (règle de MoteurMCD.typeAuto) ; s.majAuto() la met à jour
+  // quand le nom de l'attribut ou la case « identifiant » change.
   function selectType(attr) {
-    const s = el("select", { title: "Type de la colonne dans le SQL (auto : entier pour un identifiant, texte sinon)" });
+    const s = el("select", { title: "Type de la colonne dans le SQL. Auto : entier pour un identifiant qui commence par num, numéro ou id ; texte sinon." });
     const liste = TYPES.slice();
     if (attr.type && !liste.some(([v]) => v === attr.type)) liste.push([attr.type, attr.type]);
     liste.forEach(([v, t]) => {
@@ -43,6 +46,10 @@
       if ((attr.type || "") === v) o.selected = true;
       s.appendChild(o);
     });
+    s.majAuto = () => {
+      s.options[0].textContent = "auto (" + (M.typeAuto(attr.nom, !!attr.ident) === "INTEGER" ? "entier" : "texte") + ")";
+    };
+    s.majAuto();
     s.addEventListener("change", () => { attr.type = s.value; planifier(); });
     return s;
   }
@@ -146,11 +153,13 @@
     const fs = el("fieldset");
     fs.appendChild(el("legend", { text: "Attributs" }));
     fs.appendChild(el("p", { class: "aide", text: "Coche « identifiant » pour l'attribut (ou les attributs) qui distingue chaque occurrence : il est souligné et devient la clé primaire. Entrée ajoute un attribut." }));
+    fs.appendChild(el("p", { class: "aide", text: "Type « auto » : un identifiant qui commence par num, numéro ou id devient un entier ; tous les autres attributs sont du texte (un code comme R1 doit être du texte). Choisis un autre type si besoin." }));
     if (!e.attributs.length) fs.appendChild(el("p", { class: "row-empty", text: "Aucun attribut." }));
     e.attributs.forEach((a, i) => {
       const nom = el("input", { type: "text", placeholder: "attribut" });
       nom.value = a.nom;
-      nom.addEventListener("input", () => { a.nom = nom.value; planifier(); });
+      const typeSel = selectType(a);
+      nom.addEventListener("input", () => { a.nom = nom.value; typeSel.majAuto(); planifier(); });
       nom.addEventListener("keydown", (ev) => {
         if (ev.key !== "Enter") return;
         ev.preventDefault();
@@ -165,12 +174,13 @@
       coche.addEventListener("change", () => {
         a.ident = coche.checked;
         lab.classList.toggle("on", coche.checked);
+        typeSel.majAuto();
         planifier();
       });
       const del = el("button", { class: "danger del", text: "✕", title: "Supprimer cet attribut", onclick: () => {
         e.attributs.splice(i, 1); renderEntite(e); planifier();
       } });
-      fs.appendChild(el("div", { class: "row" }, [nom, lab, selectType(a), del]));
+      fs.appendChild(el("div", { class: "row" }, [nom, lab, typeSel, del]));
     });
     fs.appendChild(el("button", { class: "ghost", text: "+ Ajouter un attribut", onclick: () => {
       e.attributs.push({ nom: "", ident: !e.attributs.some((x) => x.ident), type: "" });
@@ -393,6 +403,14 @@
     const texte = "**MCD**\n\n```mermaid\n" + derniers.mcd + "\n```\n\n**Schéma relationnel (MLD)**\n\n" + derniers.mldTexte + "\n";
     await copierTexte(texte);
     signaler("#copiedAll");
+  });
+
+  $("#copySqlTopBtn").addEventListener("click", async () => {
+    majSorties(); // remplit tout de suite la zone SQL (sans attendre l'aperçu)
+    const sql = $("#codeSql").value;
+    if (!sql) return;
+    await copierTexte(sql);
+    signaler("#copiedSqlTop");
   });
 
   // ---------- import / remise à zéro ----------
