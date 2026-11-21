@@ -26,8 +26,16 @@
   majEtatsFacsimile pour que les pages inactives aient exactement les
   mêmes éléments (même hauteur) que la page active.
 
-  Module autonome : ne fait RIEN si window.NOTEBOOK_CELLULES_ACTIF !== true
-  (Dariush Linux ne pose pas ce drapeau).
+  Deux modes :
+  - window.NOTEBOOK_CELLULES_ACTIF = true (Python, SQL) : tout ce qui
+    précède ;
+  - window.CELLULES_MARKDOWN_ACTIF = true (Linux, pas de zone de code :
+    le terminal est en dessous) : seulement les "+" entre les markdowns,
+    au-dessus du premier et sous le dernier ; ils ajoutent directement un
+    markdown dans la page affichée. Les pages restent gérées par le + et
+    le ✂ du haut, les ↑ ↓ ✂ des markdowns restent dans leur page
+    (fonctionnement d'origine de markdown.js / pagesmultiples.js).
+  Sans l'un de ces drapeaux, le module ne fait RIEN.
 
   Intégration (après pagesmultiples.js) :
      <script defer src="../Dariush_Commun/version3/cellules.js?v=NNNN"></script>
@@ -36,11 +44,15 @@
 (function () {
   "use strict";
 
-  if (window.NOTEBOOK_CELLULES_ACTIF !== true) return;
+  const MODE_COMPLET = window.NOTEBOOK_CELLULES_ACTIF === true;
+  const MODE_MARKDOWN = !MODE_COMPLET && window.CELLULES_MARKDOWN_ACTIF === true;
+  if (!MODE_COMPLET && !MODE_MARKDOWN) return;
 
   function pm() { return window.PagesMultiples || null; }
 
+  // Règles du notebook par cellules (mode complet seulement).
   function regles() {
+    if (!MODE_COMPLET) return null;
     const gestionnaire = pm();
     return (gestionnaire && gestionnaire.cellules) ? gestionnaire.cellules : null;
   }
@@ -105,9 +117,10 @@
 
   // "+" tout en haut du document : au-dessus du premier markdown de la
   // page 1 seulement (zone vive comme fac-similé : même hauteur).
+  // Linux (une page à l'écran) : au-dessus du premier markdown de chaque page.
   function majSepDebut(conteneur, p) {
     const existant = conteneur.querySelector(':scope > .nc-sep[data-apres="debut"]');
-    if (p === 0) {
+    if (p === 0 || MODE_MARKDOWN) {
       const premier = conteneur.querySelector(":scope > .md-block");
       if (!existant && premier) conteneur.insertBefore(creerSeparateur("debut"), premier);
     } else if (existant) {
@@ -115,9 +128,35 @@
     }
   }
 
+  // Linux : les boutons ✂ ↑ ↓ gardent leur fonctionnement d'origine
+  // (markdown.js les grise) ; on ne fait qu'expliquer pourquoi ils le sont.
+  function majRaisonsMarkdownSeul(conteneur) {
+    conteneur.querySelectorAll(".md-block").forEach((bloc) => {
+      [
+        [".md-btn-cut", "Supprimer ce markdown", "Impossible : une page garde au moins un markdown"],
+        [".md-btn-up", "Déplacer ce markdown vers le haut", "Déjà en haut de la page"],
+        [".md-btn-down", "Déplacer ce markdown vers le bas", "Déjà en bas de la page"]
+      ].forEach(([selecteur, titreOk, raison]) => {
+        const btn = bloc.querySelector(selecteur);
+        if (btn) btn.title = btn.disabled ? raison : titreOk;
+      });
+    });
+  }
+
   function majEtatsMarkdowns(conteneur, p, vive) {
+    if (!conteneur) return;
+    if (MODE_MARKDOWN) {
+      majSepDebut(conteneur, p);
+      majRaisonsMarkdownSeul(conteneur);
+      conteneur.querySelectorAll(".nc-sep .nc-sep-btn").forEach((btn) => {
+        btn.title = btn.closest(".nc-sep").dataset.apres === "debut"
+          ? "Ajouter un markdown en haut de cette page"
+          : "Ajouter un markdown ici";
+      });
+      return;
+    }
     const r = regles();
-    if (!conteneur || !r) return;
+    if (!r) return;
     majSepDebut(conteneur, p);
     conteneur.querySelectorAll(".md-block").forEach((bloc, j) => {
       const coupe = bloc.querySelector(".md-btn-cut");
@@ -175,6 +214,7 @@
     if (!gestionnaire || !gestionnaire.cellules) return;
     const p = gestionnaire.getActivePageIndex();
     majEtatsMarkdowns(document.getElementById("markdownsContainer"), p, true);
+    if (MODE_MARKDOWN) return;
     poserBarreCodeVive();
     majEtatsCode(
       document.querySelector("#mainSplit .code-block-toolbar"),
@@ -485,6 +525,11 @@
     e.preventDefault();
     e.stopPropagation();
 
+    if (MODE_MARKDOWN) {
+      surClicMarkdownSeul(btn);
+      return;
+    }
+
     const r = regles();
     if (!r) return;
     if (btn.classList.contains("is-disabled")) return;
@@ -530,10 +575,29 @@
     else if (btn.classList.contains("md-btn-down")) r.deplacerMarkdown(p, j, +1);
   }
 
+  // Linux : le "+" ajoute directement un markdown dans la page affichée
+  // (pas de choix : il n'y a pas de zone de code).
+  function surClicMarkdownSeul(btn) {
+    const gestionnaire = pm();
+    if (!gestionnaire || !btn.classList.contains("nc-sep-btn")) return;
+    if (structureVerrouillee()) return;
+    const sep = btn.closest(".nc-sep");
+    if (sep.dataset.apres === "debut") {
+      if (typeof gestionnaire.insertMarkdownAt === "function") gestionnaire.insertMarkdownAt(0);
+      return;
+    }
+    const j = indexMarkdownAvant(sep);
+    if (j >= 0 && typeof gestionnaire.insertMarkdownAfter === "function") {
+      gestionnaire.insertMarkdownAfter(j);
+    }
+  }
+
   // ── Démarrage ────────────────────────────────────────────────────────────
   function demarrer() {
+    // Même classe dans les deux modes : mêmes "+" et mêmes boutons agrandis.
     document.body.classList.add("notebook-cellules");
-    poserSepCodeVif();
+    if (MODE_MARKDOWN) document.body.classList.add("nc-markdown-seul");
+    if (MODE_COMPLET) poserSepCodeVif();
     document.addEventListener("mousedown", surMousedown, true);
     document.addEventListener("click", surClic);
     surveillerVerrou();
@@ -565,7 +629,7 @@
 
   // Le "+" sous le code doit exister avant que le ruban ne déplace la zone
   // vive : posé dès maintenant (script defer, le document est déjà lu).
-  poserSepCodeVif();
+  if (MODE_COMPLET) poserSepCodeVif();
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", demarrer);

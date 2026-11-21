@@ -460,9 +460,9 @@ function syncCssTextarea() {
     const toolbar = document.createElement("div");
     toolbar.className = "comment-toolbar md-block-toolbar";
 
-    // Notebook par cellules (cellules.js) : on ajoute avec les "+" placés
-    // entre les cellules, plus avec la barre.
-    if (window.NOTEBOOK_CELLULES_ACTIF !== true) {
+    // Notebook par cellules (cellules.js, Python / SQL / Linux) : on ajoute
+    // avec les "+" placés entre les cellules, plus avec la barre.
+    if (window.NOTEBOOK_CELLULES_ACTIF !== true && window.CELLULES_MARKDOWN_ACTIF !== true) {
       const addBtn = document.createElement("button");
       addBtn.type = "button";
       addBtn.className = "comment-toggle-btn md-btn-add";

@@ -3483,7 +3483,8 @@ body.markdowns-multiples-actifs .comment-toolbar:has(+ #fenetrescommentaires) {
 }
 
 /* =========================================
-   NOTEBOOK PAR CELLULES (cellules.js) — Python et SQL
+   NOTEBOOK PAR CELLULES (cellules.js) — Python et SQL, et Linux pour les
+   "+" entre markdowns et les barres agrandies (même classe sur <body>).
    "+" entre les cellules, barre au-dessus de chaque zone de code, menu du
    "+", fenêtre du ✂. Les mêmes éléments sont posés dans la zone vive et
    dans les fac-similés du ruban : hauteurs identiques (pas de saut).
@@ -3528,10 +3529,23 @@ body.markdowns-multiples-actifs .comment-toolbar:has(+ #fenetrescommentaires) {
   border-radius: 50%;
   background: #fff;
   color: #2f6feb;
-  font: 700 20px/1 system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 0;
+  line-height: 0;
   cursor: pointer;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
   transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Le caractère "+" de la police n'est jamais exactement au centre du
+   rond (sa position dépend de la police) : on le dessine, 12 px pile au
+   milieu des 22 px intérieurs, de la couleur du bouton. */
+.nc-sep-btn::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M4.8 0H7.2V4.8H12V7.2H7.2V12H4.8V7.2H0V4.8H4.8Z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M4.8 0H7.2V4.8H12V7.2H7.2V12H4.8V7.2H0V4.8H4.8Z'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
 /* Plus précis que button:hover / button:active (style global). */

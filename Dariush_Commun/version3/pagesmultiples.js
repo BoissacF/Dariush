@@ -309,22 +309,25 @@ function loadPageIntoEditor(index, options = {}) {
       pagesState.nextBtnEl.style.opacity = current >= total ? "0.5" : "1";
     }
 
-    // Infobulles : en notebook continu toutes les pages se suivent à l'écran,
-    // on rappelle donc ce qu'est une page et laquelle est concernée.
+    // Infobulles : on rappelle ce qu'est une page et laquelle est concernée.
+    // Linux (CELLULES_MARKDOWN_ACTIF) : pas de zone de code, le terminal
+    // est le même pour toutes les pages.
+    const sansCode = window.CELLULES_MARKDOWN_ACTIF === true;
+    const definition = sansCode
+      ? "(une page = un ou plusieurs markdowns)"
+      : "(une page = un ou plusieurs markdowns + une zone de code)";
     if (pagesState.addBtnEl) {
       pagesState.addBtnEl.title =
-        `Ajouter une page vide juste après la page ${current}/${total}\n` +
-        "(une page = un ou plusieurs markdowns + une zone de code)";
+        `Ajouter une page vide juste après la page ${current}/${total}\n` + definition;
     }
 
     if (pagesState.removeBtnEl) {
       pagesState.removeBtnEl.disabled = total <= 1;
       pagesState.removeBtnEl.style.opacity = total <= 1 ? "0.5" : "1";
       pagesState.removeBtnEl.title = total <= 1
-        ? "Impossible de supprimer : il ne reste qu'une seule page\n" +
-          "(une page = un ou plusieurs markdowns + une zone de code)"
+        ? "Impossible de supprimer : il ne reste qu'une seule page\n" + definition
         : `Supprimer la page ${current}/${total}\n` +
-          "(tous ses markdowns et sa zone de code)";
+          (sansCode ? "(tous ses markdowns)" : "(tous ses markdowns et sa zone de code)");
     }
 
     // Bouton "Tous" : visible uniquement s'il y a au moins 2 pages.
@@ -371,7 +374,9 @@ function removeCurrentPage() {
 
   const ok = confirm(
     `Supprimer la page ${pagesState.activeIndex + 1}/${pagesState.pages.length} ?\n\n` +
-    "Tous ses markdowns et sa zone de code seront effacés."
+    (window.CELLULES_MARKDOWN_ACTIF === true
+      ? "Tous ses markdowns seront effacés."
+      : "Tous ses markdowns et sa zone de code seront effacés.")
   );
 
   if (!ok) return;
@@ -455,6 +460,30 @@ function removeCurrentPage() {
 
     refreshMarkdownBlocksUi(pos + 1);
   }
+  // Insère un markdown vide à la position 'pos' de la page active (0 = au-
+  // dessus du premier). Sert au "+" du haut de page de Dariush Linux.
+  function insertMarkdownAt(pos) {
+    const page = getCurrentPage();
+    if (!page) return;
+
+    saveActivePageFromEditor();
+
+    if (!Array.isArray(page.markdowns) || !page.markdowns.length) {
+      page.markdowns = [String(page.comment || "")];
+    }
+
+    let p = parseInt(pos, 10);
+    if (!Number.isFinite(p) || p < 0) p = 0;
+    if (p > page.markdowns.length) p = page.markdowns.length;
+
+    page.markdowns.splice(p, 0, "");
+    page.comment = (typeof joinMarkdowns === "function")
+      ? joinMarkdowns(page.markdowns)
+      : page.markdowns.join("\n\n");
+
+    refreshMarkdownBlocksUi(p);
+  }
+
   // Supprime le markdown à la position 'index' dans la page active.
   // Refuse de supprimer s'il ne reste qu'un seul bloc (invariant : au moins 1).
   function removeMarkdownAt(index) {
@@ -1236,6 +1265,7 @@ function getAllPages() {
     updatePaginationUi,
     loadPageIntoEditor,
     insertMarkdownAfter,
+    insertMarkdownAt,
     removeMarkdownAt,
     moveMarkdownUp,
     moveMarkdownDown,
