@@ -686,14 +686,15 @@ function removeCurrentPage() {
 
   // apres : index du markdown sous lequel on insère, "code" (sous la zone
   // de code) ou "debut" (tout en haut du document, page 0).
+  // Toujours possible : insererCelluleApres ajoute un markdown vide là où la
+  // règle "jamais deux zones de code de suite" l'exige.
   function peutInsererCode(p, apres) {
     const page = pagesState.pages[p];
     if (!page) return verdict(false, "");
-    if (apres === "debut") return verdict(false, "Impossible : le document commence toujours par un markdown");
-    if (apres === "code") return verdict(false, `Impossible : ${DEUX_CODES}`);
+    if (apres === "debut" || apres === "code") return verdict(true);
     const j = parseInt(apres, 10);
-    if (Number.isFinite(j) && j >= 0 && j < mdsDe(page).length - 1) return verdict(true);
-    return verdict(false, `Impossible : une zone de code suit déjà ce markdown (${DEUX_CODES})`);
+    if (Number.isFinite(j) && j >= 0 && j < mdsDe(page).length) return verdict(true);
+    return verdict(false, "");
   }
 
   // mode : "page" (markdowns + code) ou "code" (la zone de code seule).
@@ -849,16 +850,27 @@ function removeCurrentPage() {
   // p : index de la page ; j : index du markdown dans la page.
 
   // "+" sous une cellule. apres : index du markdown, "code", ou "debut"
-  // (tout en haut du document : un markdown seulement).
-  // type : "markdown" ou "code".
+  // (tout en haut du document). type : "markdown" ou "code".
+  // Une zone de code s'insère partout ; un markdown vide est ajouté, sans
+  // message, là où il en faut un :
+  //   - rien au-dessus (haut du document, juste sous une zone de code) :
+  //     markdown vide au-dessus de la nouvelle zone de code ;
+  //   - une zone de code juste en dessous : markdown vide entre les deux.
   function insererCelluleApres(p, apres, type) {
     if (!cellulesActives()) return false;
     const pages = pagesState.pages;
     if (!pages[p]) return false;
 
     if (apres === "debut") {
-      if (p !== 0 || type !== "markdown") return false;
+      if (p !== 0) return false;
       const avant = debutStructure();
+      if (type === "code") {
+        // Nouvelle première page : markdown vide + la zone de code.
+        const nouvelle = pageVide();
+        pages.unshift(nouvelle);
+        finStructure(avant, nouvelle, { focusCode: true });
+        return true;
+      }
       const premiere = pages[0];
       mdsDe(premiere).unshift("");
       resynchroniser(premiere);
@@ -867,7 +879,15 @@ function removeCurrentPage() {
     }
 
     if (apres === "code") {
-      if (type === "code") return false;
+      if (type === "code") {
+        // Juste sous une zone de code : nouvelle page (markdown vide + la
+        // zone de code) ; la page suivante commence déjà par un markdown.
+        const avant = debutStructure();
+        const nouvelle = pageVide();
+        pages.splice(p + 1, 0, nouvelle);
+        finStructure(avant, nouvelle, { focusCode: true });
+        return true;
+      }
       const avant = debutStructure();
       if (p === pages.length - 1) {
         // Sous la dernière zone de code : une page entière (markdown + code).
@@ -893,11 +913,13 @@ function removeCurrentPage() {
       const mds = mdsDe(page);
       // La page est coupée en deux : les markdowns jusqu'à j et le nouveau
       // code forment une nouvelle page, placée avant ; l'ancienne garde son
-      // code (et sa sortie) avec les markdowns restants.
+      // code (et sa sortie) avec les markdowns restants — un markdown vide
+      // s'il n'en reste aucun (sinon deux zones de code se suivraient).
       const partants = mds.slice(0, j + 1);
+      const restants = mds.slice(j + 1);
       const nouvelle = pageVide();
       nouvelle.markdowns = emporterImages(page, nouvelle, partants);
-      page.markdowns = mds.slice(j + 1);
+      page.markdowns = restants.length ? restants : [""];
       oublierImagesParties(page, nomsCitesDans(partants));
       resynchroniser(nouvelle);
       resynchroniser(page);

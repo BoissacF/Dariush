@@ -6,13 +6,13 @@
   Les pages restent le modèle interne (pagesmultiples.js) : une page = un
   ou plusieurs markdowns puis UNE zone de code. À l'écran, on manipule les
   cellules une par une, comme dans un notebook :
-  - un "+" bien visible entre deux cellules : petite fenêtre "Voulez-vous
-    ajouter ici : un markdown / une zone de code". Un "+" aussi tout en
-    haut du document (un markdown seulement : le document commence
-    toujours par un markdown).
-    Une zone de code ne peut pas suivre une zone de code : le choix est
-    alors grisé, avec la raison. Sous la dernière zone de code, le "+"
-    ajoute directement une page (un markdown + une zone de code) ;
+  - un "+" bien visible entre deux cellules et tout en haut du document :
+    petite fenêtre "Voulez-vous ajouter ici : un markdown / une zone de
+    code". Une zone de code s'insère partout : un markdown vide est ajouté
+    automatiquement s'il n'y a pas de markdown au-dessus, ou si une autre
+    zone de code suit juste en dessous (deux zones de code ne se suivent
+    jamais). Sous la dernière zone de code, le "+" ajoute directement une
+    page (un markdown + une zone de code) ;
   - au-dessus de chaque zone de code, une barre comme celle des markdowns :
     ✂ (supprimer la zone de code, ou toute la page), ↑ et ↓ (déplacer) ;
   - les ↑ ↓ des markdowns franchissent les zones de code (le markdown
@@ -170,18 +170,11 @@
       poserEtat(bas, r.peutDeplacerMarkdown(p, j, +1), "Déplacer ce markdown vers le bas");
     });
 
-    const blocs = conteneur.querySelectorAll(".md-block");
-    const dernier = blocs.length - 1;
     conteneur.querySelectorAll(".nc-sep").forEach((sep) => {
       const btn = sep.querySelector(".nc-sep-btn");
       if (!btn) return;
-      if (sep.dataset.apres === "debut") {
-        btn.title = "Ajouter un markdown tout en haut du document";
-        return;
-      }
-      const j = indexMarkdownAvant(sep);
-      btn.title = j === dernier
-        ? "Ajouter un markdown ici (une zone de code suit déjà ce markdown)"
+      btn.title = sep.dataset.apres === "debut"
+        ? "Ajouter un markdown ou une zone de code tout en haut du document"
         : "Ajouter un markdown ou une zone de code ici";
     });
   }
@@ -203,7 +196,7 @@
       const derniere = p === gestionnaire.getPagesCount() - 1;
       btn.title = derniere
         ? "Ajouter une page : un markdown + une zone de code"
-        : "Ajouter un markdown ici";
+        : "Ajouter un markdown ou une zone de code ici";
     }
   }
 
