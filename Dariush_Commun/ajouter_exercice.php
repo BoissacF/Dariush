@@ -86,7 +86,7 @@ if (!in_array($source, $sourcesValides, true)) {
     $source = 'python';
 }
 
-$niveauxAutorises = ["premiere", "terminale", "debutant", "premiere2", "terminale2", "BAC", "superieur", "expert"];
+$niveauxAutorises = ["premiere", "terminale", "debutant", "premiere2", "terminale2", "premiere3", "terminale3", "BAC", "superieur", "expert"];
 
 if ($codeUtilisateur === "" || $niveau === "" || trim($descriptif) === "" || $lien === "") {
     http_response_code(400);

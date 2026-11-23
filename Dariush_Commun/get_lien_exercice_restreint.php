@@ -76,9 +76,16 @@ try {
         exit;
     }
 
-    // Récupérer le lien de l'exercice restreint
-    $stmtEx = $pdo->prepare("SELECT lien FROM exercices WHERE lien_court = ? AND acces_restreint = 1 LIMIT 1");
-    $stmtEx->execute([$lienCourt]);
+    // Récupérer le lien de l'exercice restreint. La liste publique
+    // (get_exercices.php) le désigne par une référence "id-123" et non par son
+    // vrai lien court, qui n'est renvoyé qu'ici, une fois le code vérifié.
+    if (preg_match('/^id-(\d+)$/', $lienCourt, $morceaux)) {
+        $stmtEx = $pdo->prepare("SELECT lien, lien_court FROM exercices WHERE id = ? AND acces_restreint = 1 LIMIT 1");
+        $stmtEx->execute([(int)$morceaux[1]]);
+    } else {
+        $stmtEx = $pdo->prepare("SELECT lien, lien_court FROM exercices WHERE lien_court = ? AND acces_restreint = 1 LIMIT 1");
+        $stmtEx->execute([$lienCourt]);
+    }
     $exercice = $stmtEx->fetch(PDO::FETCH_ASSOC);
 
     if (!$exercice) {
@@ -89,7 +96,8 @@ try {
 
     echo json_encode([
         "ok" => true,
-        "lien" => $exercice["lien"]
+        "lien" => $exercice["lien"],
+        "lien_court" => $exercice["lien_court"]
     ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
 } catch (Throwable $e) {

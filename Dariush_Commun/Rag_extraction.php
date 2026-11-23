@@ -55,12 +55,18 @@ $NIVEAUX = [
     "debutant"   => ["rang" => 1, "diff" => "facile"],
     "premiere"   => ["rang" => 2, "diff" => "facile"],
     "premiere2"  => ["rang" => 3, "diff" => "difficile"],
+    "premiere3"  => ["rang" => 3, "diff" => "difficile"],
     "terminale"  => ["rang" => 4, "diff" => "facile"],
     "terminale2" => ["rang" => 5, "diff" => "difficile"],
+    "terminale3" => ["rang" => 5, "diff" => "difficile"],
     "BAC"        => ["rang" => 5, "diff" => "difficile"],
     "superieur"  => ["rang" => 6, "diff" => "facile"],
     "expert"     => ["rang" => 7, "diff" => "difficile"],
 ];
+
+// Un contrôle sans corrigé n'a pas encore été donné : il n'entre pas dans le
+// corpus. Dès qu'il a son corrigé, il est traité comme tout autre exercice.
+const NIVEAUX_CONTROLES = ["premiere3", "terminale3"];
 
 /* --------------------------- OUTILS DE DÉCODAGE ---------------------------- */
 
@@ -240,6 +246,14 @@ try {
             $groupes[$base]["enonce"] = $e;
         }
     }
+    $nbControles = 0;
+    foreach ($groupes as $base => $g) {
+        if (!$g["corrige"] && in_array((string)$g["enonce"]["niveau"], NIVEAUX_CONTROLES, true)) {
+            unset($groupes[$base]);
+            $nbControles++;
+        }
+    }
+    $rapport[] = "Controles sans corrige, exclus : " . $nbControles;
     $rapport[] = "Exercices logiques (groupes) : " . count($groupes);
 
     // 4) Reconstruction complète des lignes python (dans une transaction).

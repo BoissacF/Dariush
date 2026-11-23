@@ -72,7 +72,7 @@ $accesRestreint = isset($input["acces_restreint"]) ? (int)(bool)$input["acces_re
 $correction     = !empty($input["correction"]) ? true : false;
 
 $niveau = trim($input["niveau"] ?? "premiere");
-$niveauxAutorises = ["premiere", "terminale", "debutant", "premiere2", "terminale2", "BAC", "superieur", "expert"];
+$niveauxAutorises = ["premiere", "terminale", "debutant", "premiere2", "terminale2", "premiere3", "terminale3", "BAC", "superieur", "expert"];
 if (!in_array($niveau, $niveauxAutorises, true)) $niveau = "premiere";
 
 // Récupération du paramètre source (défaut = 'python' pour rétro-compatibilité)

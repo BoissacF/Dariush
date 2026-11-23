@@ -47,10 +47,17 @@ try {
 
     $resultats = $stmt->fetchAll();
 
-    // On ne renvoie PAS le lien complet pour les exercices restreints
+    // On ne renvoie PAS le lien complet pour les exercices restreints, ni leur
+    // vrai lien court : celui-ci ouvre l'exercice sans mot de passe. On envoie à
+    // la place une référence "id-123", que seul get_lien_exercice_restreint.php
+    // sait résoudre, après vérification du code.
     foreach ($resultats as &$row) {
         $row['acces_restreint'] = (int)($row['acces_restreint'] ?? 0);
         $row['nb_pages'] = (int)($row['nb_pages'] ?? 1);
+
+        if ($row['acces_restreint'] === 1 && trim((string)($row['lien_court'] ?? '')) !== '') {
+            $row['lien_court'] = 'id-' . (int)$row['id'];
+        }
     }
     unset($row);
 

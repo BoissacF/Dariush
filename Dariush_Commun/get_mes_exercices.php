@@ -63,9 +63,10 @@ try {
     $sqlExercices = "SELECT id, niveau, descriptif, lien_court, acces_restreint, source
                  FROM exercices
                  WHERE prof_id = ? AND source = ?
-                 ORDER BY FIELD(niveau, 'debutant', 'premiere', 'premiere2',
-                                        'terminale', 'terminale2', 'BAC',
-                                        'superieur', 'expert'),
+                 ORDER BY FIELD(niveau, 'debutant',
+                                        'premiere', 'premiere2', 'premiere3',
+                                        'terminale', 'terminale2', 'terminale3',
+                                        'BAC', 'superieur', 'expert'),
                           descriptif ASC";
     $stmtExercices = $pdo->prepare($sqlExercices);
     $stmtExercices->execute([$prof["id"], $source]);

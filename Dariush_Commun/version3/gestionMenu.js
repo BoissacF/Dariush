@@ -147,8 +147,10 @@ function formatNiveau(niveau) {
     debutant: "Débutant",
     premiere: "Première NSI — bases",
     premiere2: "Première NSI — avancé",
+    premiere3: "Première NSI — contrôles",
     terminale: "Terminale NSI — bases",
     terminale2: "Terminale NSI — avancé",
+    terminale3: "Terminale NSI — contrôles",
     BAC: "BAC",
     superieur: "Supérieur",
     expert: "Expert"
@@ -168,19 +170,21 @@ const ARBRE_NIVEAUX = [
   {
     cle: "premiere",
     libelle: "Première NSI",
-    niveaux: ["premiere", "premiere2"],
+    niveaux: ["premiere", "premiere2", "premiere3"],
     sousMenus: [
       { cle: "premiere-bases",  libelle: "Bases (cours + exos classiques)", niveaux: ["premiere"] },
-      { cle: "premiere-avance", libelle: "Avancé : activités et problèmes", niveaux: ["premiere2"] }
+      { cle: "premiere-avance", libelle: "Avancé : activités et problèmes", niveaux: ["premiere2"] },
+      { cle: "premiere-controles", libelle: "Contrôles", niveaux: ["premiere3"] }
     ]
   },
   {
     cle: "terminale",
     libelle: "Terminale NSI",
-    niveaux: ["terminale", "terminale2"],
+    niveaux: ["terminale", "terminale2", "terminale3"],
     sousMenus: [
       { cle: "terminale-bases",  libelle: "Bases (cours + exos classiques)", niveaux: ["terminale"] },
-      { cle: "terminale-avance", libelle: "Avancé : activités et problèmes", niveaux: ["terminale2"] }
+      { cle: "terminale-avance", libelle: "Avancé : activités et problèmes", niveaux: ["terminale2"] },
+      { cle: "terminale-controles", libelle: "Contrôles", niveaux: ["terminale3"] }
     ]
   },
   { cle: "bac",       libelle: "BAC",       niveaux: ["BAC"] },
@@ -331,7 +335,11 @@ function construireLigneExerciceHtml(ex, correctionsParTitre, baseUrlExo) {
       ? baseUrlExo + "?exo=" + encodeURIComponent(lienCourtCode)
       : "";
 
-    const lien = lienCourtComplet || "#";
+    // Exercice restreint : le serveur envoie une référence "id-123" à la place du
+    // vrai lien court. Elle ne va ni dans le href (sinon « ouvrir dans un nouvel
+    // onglet » contournerait le mot de passe) ni dans la zone de lien court, que
+    // tenterOuvertureRestreinte remplit une fois le code vérifié.
+    const lien = (lienCourtComplet && !estRestreint) ? lienCourtComplet : "#";
     const exId = escapeHtml(String(ex.id ?? ""));
 
     let btnLienCourt = "";
@@ -356,7 +364,7 @@ function construireLigneExerciceHtml(ex, correctionsParTitre, baseUrlExo) {
 
     let zoneLienCourt = "";
     if (lienCourtComplet) {
-      zoneLienCourt = "<div class=\"zone-lien-court-exercice\" id=\"zone-lien-court-" + exId + "\" style=\"display:none;\"><div class=\"lien-court-exercice-texte\">" + escapeHtml(lienCourtComplet) + "</div></div>";
+      zoneLienCourt = "<div class=\"zone-lien-court-exercice\" id=\"zone-lien-court-" + exId + "\" style=\"display:none;\"><div class=\"lien-court-exercice-texte\">" + escapeHtml(estRestreint ? "" : lienCourtComplet) + "</div></div>";
     }
 
     // ─── Bloc CORRIGÉ : " / 🔗 🔒 Corrigé " si une correction existe ───
@@ -393,9 +401,9 @@ function construireLigneExerciceHtml(ex, correctionsParTitre, baseUrlExo) {
         blocCorrige = "<span class=\"separateur-corrige\" style=\"margin:0 4px; color:#888;\">/</span>"
           + btnCorrige
           + iconeCorrRestreint
-          + "<a href=\"" + escapeHtml(corrLienComplet) + "\" title=\"Corrigé\" " + attrCorr + " class=\"titre-corrige-modal\">Corrigé</a>";
+          + "<a href=\"" + escapeHtml(corrRestreint ? "#" : corrLienComplet) + "\" title=\"Corrigé\" " + attrCorr + " class=\"titre-corrige-modal\">Corrigé</a>";
 
-        zoneLienCorrige = "<div class=\"zone-lien-court-exercice\" id=\"zone-lien-court-" + corrId + "\" style=\"display:none;\"><div class=\"lien-court-exercice-texte\">" + escapeHtml(corrLienComplet) + "</div></div>";
+        zoneLienCorrige = "<div class=\"zone-lien-court-exercice\" id=\"zone-lien-court-" + corrId + "\" style=\"display:none;\"><div class=\"lien-court-exercice-texte\">" + escapeHtml(corrRestreint ? "" : corrLienComplet) + "</div></div>";
       }
     }
 
@@ -736,20 +744,9 @@ async function ouvrirRechercheExercices() {
       const href = link.getAttribute("href") || "";
       if (!href) return;
 
-      // Mémorise l'exercice ouvert pour que l'agent Aide retrouve son corrigé.
-      // Couvre le clic normal (?exo=code dans le href) et le clic restreint
-      // (data-lien-court-code). Non bloquant.
-      try {
-        const mExo = href.match(/[?&]exo=([^&]+)/);
-        const codeExo = link.dataset.lienCourtCode
-          || (mExo ? decodeURIComponent(mExo[1]) : "");
-        window.__exerciceCourant = {
-          descriptif: (link.textContent || "").trim(),
-          lien_court: codeExo,
-          source: (typeof getDariushSource === "function") ? getDariushSource() : "python"
-        };
-      } catch (e) { /* non bloquant */ }
-
+      // Exercice restreint : c'est tenterOuvertureRestreinte qui mémorise
+      // l'exercice ouvert, une fois le code vérifié (son lien court n'est pas
+      // connu avant).
       if (link.dataset.restreint === "1") {
         event.preventDefault();
         const lienCourtCode = link.dataset.lienCourtCode || "";
@@ -758,6 +755,17 @@ async function ouvrirRechercheExercices() {
         }
         return;
       }
+
+      // Mémorise l'exercice ouvert pour que l'agent Aide retrouve son corrigé.
+      // Non bloquant.
+      try {
+        const mExo = href.match(/[?&]exo=([^&]+)/);
+        window.__exerciceCourant = {
+          descriptif: (link.textContent || "").trim(),
+          lien_court: mExo ? decodeURIComponent(mExo[1]) : "",
+          source: (typeof getDariushSource === "function") ? getDariushSource() : "python"
+        };
+      } catch (e) { /* non bloquant */ }
 
       const isExerciseLink =
         href.includes("Dariush_Python") ||
@@ -1022,9 +1030,12 @@ async function tenterOuvertureRestreinte(lienCourtCode, code, modeLienCourt = fa
     const data = await response.json();
     if (!response.ok) return false;
 
+    // Le vrai lien court n'arrive qu'ici, une fois le code vérifié.
+    const lienCourtReel = (data.lien_court || lienCourtCode || "").trim();
+
     // Mode lien court : afficher la zone lien court + copier dans le presse-papier
     if (modeLienCourt) {
-      const urlCourte = "https://physalgo.fr/Dariush_Python/index.html?exo=" + encodeURIComponent(lienCourtCode);
+      const urlCourte = getBaseUrlExercices() + "?exo=" + encodeURIComponent(lienCourtReel);
 
       // Afficher la zone lien court sous l'exercice
       document.querySelectorAll(".zone-lien-court-exercice").forEach(el => {
@@ -1032,6 +1043,8 @@ async function tenterOuvertureRestreinte(lienCourtCode, code, modeLienCourt = fa
       });
       const zoneLien = document.getElementById("zone-lien-court-" + exerciceId);
       if (zoneLien) {
+        const texteLien = zoneLien.querySelector(".lien-court-exercice-texte");
+        if (texteLien) texteLien.textContent = urlCourte;
         zoneLien.style.display = "block";
       }
 
@@ -1054,6 +1067,12 @@ async function tenterOuvertureRestreinte(lienCourtCode, code, modeLienCourt = fa
 
     const ok = await decode_url(data.lien);
     if (!ok) return false;
+
+    // Mémorise l'exercice ouvert pour que l'agent Aide retrouve son corrigé.
+    window.__exerciceCourant = {
+      lien_court: lienCourtReel,
+      source: (typeof getDariushSource === "function") ? getDariushSource() : "python"
+    };
 
     // Ouvrir un exercice = nouveau fichier : mémoire Python propre (sinon les
     // globales du fichier précédent, ex. "from PIL.Image import *", subsistent).
